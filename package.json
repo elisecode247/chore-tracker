@@ -1,0 +1,30 @@
+{
+  "name": "chore-tracker",
+  "engines": {
+    "node": "14.17.1"
+  },
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "nodemon": "^2.0.12"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elisecode247/chore-tracker.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/elisecode247/chore-tracker/issues"
+  },
+  "homepage": "https://github.com/elisecode247/chore-tracker#readme"
+}
