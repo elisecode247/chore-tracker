@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export const choresApi = createApi({
     reducerPath: 'chores',
-    baseQuery: fetchBaseQuery({ baseUrl: window.location.href + '/api/v1/' }),
+    baseQuery: fetchBaseQuery({ baseUrl: window.location.href + 'api/v1/' }),
     tagTypes: ['chores'],
     endpoints: (builder) => ({
         getChores: builder.query({
