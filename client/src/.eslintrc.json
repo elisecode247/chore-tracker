@@ -18,6 +18,9 @@
             "error",
             "unix"
         ],
+        "no-multi-spaces": "error",
+        "no-multiple-empty-lines": "error",
+        "object-curly-spacing": ["error", "always"],
         "quotes": [
             "error",
             "single"
@@ -25,8 +28,6 @@
         "semi": [
             "error",
             "always"
-        ],
-        "keyword-spacing": ["error", { "before": true }],
-        "space-before-function-paren": ["error", "always"]
+        ]
     }
 }
