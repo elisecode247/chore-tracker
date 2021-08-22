@@ -23,7 +23,7 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import FilterMenu from './FilterMenu';
 import { useGetChoresQuery } from '../../slices/choresApiSlice';
-import { useAddEventMutation, useGetTodayEventsQuery } from '../../slices/eventsApiSlice';
+import { useAddEventMutation, useGetTodayEventsQuery, useUpdateEventMutation } from '../../slices/eventsApiSlice';
 import { formatChores, formatEvents } from '../../utilities/chores';
 import format from 'date-fns/format';
 import { DAY_OF_WEEK_AND_DATE } from '../../constants/dateTimeFormats';
@@ -164,6 +164,8 @@ export default function EnhancedTable() {
     const { data: chores, error: choresError, isLoading: isChoresLoading } = useGetChoresQuery();
     const { data: events, error: eventsError, isLoading: isEventsLoading } = useGetTodayEventsQuery();
     const [addEvent, { isEventAddLoading }] = useAddEventMutation();
+    const [updateEvent, { isEventUpdateLoading }] = useUpdateEventMutation();
+
     const rows = Object.values({ ...formatChores(chores), ...formatEvents(events) });
 
     const handleRequestSort = (event, property) => {
@@ -176,10 +178,26 @@ export default function EnhancedTable() {
 
     };
 
-    const handleAddEvent = function (chore_uuid) {
+    const handleCompletedEvent = function (eventUuid, choreUuid, status) {
+        if (status === 'Not yet') {
+            addEvent({
+                choreUuid,
+                status: 'done',
+                completedAt: new Date()
+            });
+        } else if (status === 'progress') {
+            updateEvent({
+                uuid: eventUuid,
+                status: 'done',
+                completedAt: new Date()
+            });
+        }
+    };
+
+    const handleAddProgressEvent = function (choreUuid) {
         addEvent({
-            choreUuid: chore_uuid,
-            status: 'done',
+            choreUuid,
+            status: 'progress',
             completedAt: new Date()
         });
     };
@@ -225,7 +243,7 @@ export default function EnhancedTable() {
         return (<div>Error</div>);
     }
 
-    if (isChoresLoading || isEventsLoading || isEventAddLoading) {
+    if (isChoresLoading || isEventsLoading || isEventAddLoading || isEventUpdateLoading) {
         return (<div>Loading...</div>);
     }
 
@@ -258,17 +276,17 @@ export default function EnhancedTable() {
                             {stableSort(rows, getComparator(order, orderBy))
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((row, index) => {
-                                    const isItemSelected = isSelected(row.name);
+                                    const isItemSelected = isSelected(row.uuid);
                                     const labelId = `enhanced-table-checkbox-${index}`;
 
                                     return (
                                         <TableRow
                                             hover
-                                            onClick={(event) => handleClick(event, row.name)}
+                                            onClick={(event) => handleClick(event, row.uuid)}
                                             role="checkbox"
                                             aria-checked={isItemSelected}
                                             tabIndex={-1}
-                                            key={`${row.name}-${index}`}
+                                            key={`${row.uuid}`}
                                             selected={isItemSelected}
                                         >
                                             <TableCell padding="checkbox">
@@ -294,16 +312,20 @@ export default function EnhancedTable() {
                                             <TableCell align="right">{row.formattedLastCompletedDate}</TableCell>
                                             <TableCell padding="checkbox">
                                                 <div className={classes.tableCell}>
-                                                    <Tooltip title="Set start time now">
-                                                        <IconButton aria-label="Set start time now">
-                                                            <TimerIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                    <Tooltip title="Mark Complete">
-                                                        <IconButton aria-label="Mark Complete" onClick={() => handleAddEvent(row.uuid)}>
-                                                            <CheckCircleIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
+                                                    {row.status === 'Not yet' ? (
+                                                        <Tooltip title="Set start time now">
+                                                            <IconButton aria-label="Set start time now" onClick={() => handleAddProgressEvent(row.choreUuid)}>
+                                                                <TimerIcon />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    ) : null}
+                                                    {row.status !== 'done' ? (
+                                                        <Tooltip title="Mark Complete">
+                                                            <IconButton aria-label="Mark Complete" onClick={() => handleCompletedEvent(row.uuid, row.choreUuid, row.status)}>
+                                                                <CheckCircleIcon />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    ) : null}
                                                 </div>
                                             </TableCell>
                                         </TableRow>

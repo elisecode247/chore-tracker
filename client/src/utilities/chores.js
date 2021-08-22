@@ -177,14 +177,14 @@ export function formatChores(chores) {
 
     if (!chores || !chores.length) return [];
     return chores
-        .reduce((choreObject, chore) => {
-            
+        .reduce((choreObject, chore, index) => {
             const parsedFrequency = parseFrequency(chore.frequency);
             const lastCompletedDate = getLastCompletedDate(chore.history);
             const dueDate = calculateDueDate(parsedFrequency, lastCompletedDate, chore);
             return {
                 ...choreObject,
-                [chore.uuid]: {
+                [`chore-${chore.uuid}-${index}`]: {
+                    type: 'chore',
                     uuid: chore.uuid,
                     name: chore.name,
                     frequency: formatFrequency(parsedFrequency),
@@ -218,13 +218,15 @@ export function formatEvents(events) {
 
     if (!events || !events.length) return [];
     return events
-        .reduce((eventsObject,event) => {
+        .reduce((eventsObject, event, index) => {
             const parsedFrequency = parseFrequency(event.frequency);
             const lastCompletedDate = (event.completedAt && new Date(event.completedAt)) || null;
             const dueDate = calculateDueDate(parsedFrequency, lastCompletedDate, event);
             return {
                 ...eventsObject,
-                [event.chore_uuid]: {
+                [`chore-${event.chore_uuid}-${index}`]: {
+                    type: 'event',
+                    choreUuid: event.chore_uuid,
                     uuid: event.uuid,
                     name: event.name,
                     frequency: formatFrequency(parsedFrequency),
