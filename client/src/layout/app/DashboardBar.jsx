@@ -10,6 +10,8 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormGroup from '@material-ui/core/FormGroup';
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
+import { useSelector } from 'react-redux';
+import { userSelector } from '../../slices/userApiSlice';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -23,13 +25,17 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-export default function MenuAppBar({ selectedTab, setTab }) {
+export default function DashboardBar({ isFetching, onLogin, onLogOut, selectedTab, setTab }) {
     const classes = useStyles();
+    const { email } = useSelector(userSelector);
     const [auth, setAuth] = React.useState(true);
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
 
     const handleChange = (event) => {
+        if (!event.target.checked) {
+            onLogOut();
+        }
         setAuth(event.target.checked);
     };
 
@@ -39,7 +45,12 @@ export default function MenuAppBar({ selectedTab, setTab }) {
 
     const handleClose = () => {
         setAnchorEl(null);
+        alert('Under Construction');
     };
+
+    if (isFetching) {
+        return (<>Fetching...</>);
+    }
 
     return (
         <div className={classes.root}>
@@ -49,14 +60,15 @@ export default function MenuAppBar({ selectedTab, setTab }) {
                     <FormGroup>
                         <FormControlLabel
                             control={<Switch checked={auth} onChange={handleChange} aria-label="login switch" />}
-                            label={auth ? 'Logout' : 'Login'}
+                            label={auth ? email : 'Login'}
+                            labelPlacement="start"
                         />
                     </FormGroup>
                     {auth && (
                         <div>
                             <IconButton
                                 aria-label="account of current user"
-                                aria-controls="menu-appbar"
+                                aria-controls="menu-app-bar"
                                 aria-haspopup="true"
                                 onClick={handleMenu}
                                 color="inherit"
@@ -64,7 +76,7 @@ export default function MenuAppBar({ selectedTab, setTab }) {
                                 <AccountCircle />
                             </IconButton>
                             <Menu
-                                id="menu-appbar"
+                                id="menu-app-bar"
                                 anchorEl={anchorEl}
                                 anchorOrigin={{
                                     vertical: 'top',

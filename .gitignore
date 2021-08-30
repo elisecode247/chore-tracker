@@ -105,3 +105,5 @@ dist
 
 client/build/
 client/node_modules/
+
+.DS_Store

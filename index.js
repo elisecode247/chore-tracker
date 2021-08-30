@@ -1,17 +1,57 @@
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT;
+const accessTokenSecret = process.env.JWT_SECRET;
 const database = require('./database.js');
 const cors = require('cors');
 const path = require('path');
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
+const jwt = require('jsonwebtoken');
+
+database.connect();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'client/build')));
 
-database.connect();
+passport.use(new LocalStrategy(async function (username, password, done) {
+    try {
+        const queryString = `SELECT uuid, email FROM "user" WHERE email = '${username}' AND password = '${password}'`;
+        const result = await database.query(queryString);
+        if (!result.rows.length) return done(null, false);
+        return done(null, result.rows[0]);
+    } catch (err) {
+        return done(err, null);
+    }
+}));
 
-app.get('/api/v1/chores', async (req, res) => {
+app.get('/api/v1/auth/local', async function (req, res) {
+    if (!req.headers['authorization']){
+        return res.send({ success: false, errorMessage: 'A server error occurred. Try again later' });
+    }
+
+    const bearerToken = req.headers['authorization'].split(' ')[1];
+    try {
+        const data = await jwt.verify(bearerToken, accessTokenSecret);
+        res.send({ success: true, data });
+    } catch (err) {
+        res.send({ success: false, errorMessage: 'A server error occurred. Try again later' });
+    }
+});
+
+app.post('/api/v1/auth/local',
+    function (req, res, next) {
+        passport.authenticate('local', function (err, user, _info, _status) {
+            if (err) return res.send({ success: false, errorMessage: 'A server error occurred. Try again later' });
+            if (!user) return res.send({ success: false, errorMessage: 'User does not exist.' });
+            res.send({ success: true, data: {user, token: jwt.sign({ user }, accessTokenSecret)}});
+        })(req, res, next);
+    }
+);
+
+
+app.get('/api/v1/chores', verifyToken, async (req, res) => {
     try {
         database.query(`
             SELECT
@@ -57,15 +97,14 @@ app.get('/api/v1/chores', async (req, res) => {
             WHERE u.id = 1
             `, (err, results) => {
             if (err) throw err;
-            res.send({success: true, data: results.rows});
+            res.send({ success: true, data: results.rows });
         });
     } catch (err) {
-
-        res.send('Error ' + err);
+        res.send({ success: false, errorMessage: 'A server error occurred.' });
     }
 });
 
-app.post('/api/v1/chores', cors(), async (req, res) => {
+app.post('/api/v1/chores', verifyToken, async (req, res) => {
     try {
         const queryString = `
             INSERT INTO "chore" as c (
@@ -99,19 +138,18 @@ app.post('/api/v1/chores', cors(), async (req, res) => {
                     FROM (SELECT id FROM tag WHERE uuid in ('${req.body.selectedTags.join('\', \'')}')) t`;
                 database.query(queryString, (err) => {
                     if (err) throw err;
-                    res.send({success: true});
+                    res.send({ success: true });
                 });
             } else {
-                res.send({success: true});
+                res.send({ success: true });
             }
         });
     } catch (err) {
-        
-        res.send({success: false, error: err});
+        res.send({ success: false, error: err });
     }
 });
 
-app.put('/api/v1/chores/:chore_uuid', cors(), async (req, res) => {
+app.put('/api/v1/chores/:chore_uuid', verifyToken, async (req, res) => {
 
     try {
         const queryString = `
@@ -121,15 +159,15 @@ app.put('/api/v1/chores/:chore_uuid', cors(), async (req, res) => {
 
         database.query(queryString, (err) => {
             if (err) throw err;
-            res.send({success: true});
+            res.send({ success: true });
         });
     } catch (err) {
-        
-        res.send({success: false, error: err});
+
+        res.send({ success: false, error: err });
     }
 });
 
-app.put('/api/v1/chores', cors(), async (req, res) => {
+app.put('/api/v1/chores', verifyToken, async (req, res) => {
     try {
         const queryString = `
             UPDATE "chore"
@@ -146,16 +184,14 @@ app.put('/api/v1/chores', cors(), async (req, res) => {
         // TODO update tags
         database.query(queryString, (err) => {
             if (err) throw err;
-            res.send({success: true});
+            res.send({ success: true });
         });
     } catch (err) {
-        
-        res.send({success: false, error: err});
+        res.send({ success: false, error: err });
     }
 });
 
-
-app.get('/api/v1/events/incomplete', async (req, res) => {
+app.get('/api/v1/events/incomplete', verifyToken, async (req, res) => {
     try {
         database.query(`
             SELECT
@@ -171,15 +207,15 @@ app.get('/api/v1/events/incomplete', async (req, res) => {
             WHERE status != 'done'
         `, (err, results) => {
             if (err) throw err;
-            res.send({success: true, data: results.rows});
+            res.send({ success: true, data: results.rows });
         });
     } catch (err) {
-        
+
         res.send('Error ' + err);
     }
 });
 
-app.get('/api/v1/events/today', async (req, res) => {
+app.get('/api/v1/events/today', verifyToken, async (req, res) => {
     try {
         database.query(`
             SELECT
@@ -214,15 +250,15 @@ app.get('/api/v1/events/today', async (req, res) => {
                 (status IS NOT NULL AND status != 'done'))
         `, (err, results) => {
             if (err) throw err;
-            res.send({success: true, data: results.rows});
+            res.send({ success: true, data: results.rows });
         });
     } catch (err) {
-        
+
         res.send('Error ' + err);
     }
 });
 
-app.get('/api/v1/events', async (req, res) => {
+app.get('/api/v1/events', verifyToken, async (req, res) => {
     try {
         database.query(`
             SELECT e.*, c.*
@@ -231,15 +267,15 @@ app.get('/api/v1/events', async (req, res) => {
             WHERE status = 'done'
         `, (err, results) => {
             if (err) throw err;
-            res.send({success: true, data: results.rows});
+            res.send({ success: true, data: results.rows });
         });
     } catch (err) {
-        
+
         res.send('Error ' + err);
     }
 });
 
-app.put('/api/v1/events', async (req, res) => {
+app.put('/api/v1/events', verifyToken, async (req, res) => {
     try {
         const queryString = `UPDATE event
             SET
@@ -253,14 +289,14 @@ app.put('/api/v1/events', async (req, res) => {
 
         database.query(queryString, (err) => {
             if (err) throw err;
-            res.send({success: true});
+            res.send({ success: true });
         });
     } catch (err) {
         res.send({ success: false, error: err });
     }
 });
 
-app.post('/api/v1/events', async (req, res) => {
+app.post('/api/v1/events', verifyToken, async (req, res) => {
     try {
         const queryString = `INSERT INTO event (
             chore_id,
@@ -282,24 +318,24 @@ app.post('/api/v1/events', async (req, res) => {
         FROM (SELECT id FROM chore WHERE uuid = '${req.body.choreUuid}') c`;
         database.query(queryString, (err) => {
             if (err) throw err;
-            res.send({success: true});
+            res.send({ success: true });
         });
     } catch (err) {
         res.send({ success: false, error: err });
     }
 });
 
-app.get('/api/v1/tags', async (req, res) => {
+app.get('/api/v1/tags', verifyToken, async (req, res) => {
     try {
         database.query(`
             SELECT uuid, name, description
             FROM tag as t
         `, (err, results) => {
             if (err) throw err;
-            res.send({success: true, data: results.rows});
+            res.send({ success: true, data: results.rows });
         });
     } catch (err) {
-        
+
         res.send('Error ' + err);
     }
 });
@@ -312,4 +348,14 @@ app.listen(port, () => {
     console.info(`Example app listening at http://localhost:${port}`);
 });
 
+function verifyToken (req, res, next) {
+    if (!req.headers['authorization']) return res.sendStatus(403);
+    const bearerToken = req.headers['authorization'].split(' ')[1];
+    jwt.verify(bearerToken, accessTokenSecret, (err, user) => {
+        if (err) return res.sendStatus(403);
+        req.token = bearerToken;
+        req.user = user;
+        next();
+    });
+}
 

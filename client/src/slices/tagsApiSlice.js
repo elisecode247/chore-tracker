@@ -1,8 +1,9 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import baseQuery from './baseQuery';
 
 export const tagsApi = createApi({
     reducerPath: 'tags',
-    baseQuery: fetchBaseQuery({ baseUrl: window.location.href + 'api/v1/' }),
+    baseQuery: fetchBaseQuery(baseQuery),
     tagTypes: ['tags'],
     endpoints: (builder) => ({
         getTags: builder.query({
