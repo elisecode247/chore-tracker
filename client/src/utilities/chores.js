@@ -177,17 +177,18 @@ export function formatChores(chores) {
 
     if (!chores || !chores.length) return [];
     return chores
-        .reduce((choreObject, chore, index) => {
+        .reduce((choreObject, chore, _index) => {
             const parsedFrequency = parseFrequency(chore.frequency);
-            const lastCompletedDate = getLastCompletedDate(chore.history);
+            const lastCompletedDate = getLastCompletedDate(chore.history) || null;
             const dueDate = calculateDueDate(parsedFrequency, lastCompletedDate, chore);
             return {
                 ...choreObject,
-                [`chore-${chore.uuid}-${index}`]: {
+                [`chore-${chore.uuid}-0`]: {
                     type: 'chore',
                     uuid: chore.uuid,
                     name: chore.name,
                     frequency: formatFrequency(parsedFrequency),
+                    lastCompletedDate,
                     formattedLastCompletedDate: (lastCompletedDate && format(lastCompletedDate, DATE_AND_TIME_FORMAT)) || 'Unknown',
                     dueDate,
                     formattedDueDate: format(dueDate, TIME_FORMAT),
@@ -204,24 +205,11 @@ export function formatChores(chores) {
 }
 
 export function formatEvents(events) {
-    /*
-
-    completed_at: "2021-08-21T17:30:11.380Z"
-    completed_by: 1
-    location: null
-    name: "Walk the dogs"
-    notes: null
-    started_at: null
-    uuid: "a4960066-bfd2-4ae2-a375-27540df8f745"
-    */
-    
-
     if (!events || !events.length) return [];
     return events
         .reduce((eventsObject, event, index) => {
             const parsedFrequency = parseFrequency(event.frequency);
-            const lastCompletedDate = (event.completedAt && new Date(event.completedAt)) || null;
-            const dueDate = calculateDueDate(parsedFrequency, lastCompletedDate, event);
+            const lastCompletedDate = (event.completed_at && new Date(event.completed_at)) || null;
             return {
                 ...eventsObject,
                 [`chore-${event.chore_uuid}-${index}`]: {
@@ -230,9 +218,10 @@ export function formatEvents(events) {
                     uuid: event.uuid,
                     name: event.name,
                     frequency: formatFrequency(parsedFrequency),
-                    formattedLastCompletedDate: (lastCompletedDate && format(lastCompletedDate, DATE_AND_TIME_FORMAT)) || 'Unknown',
-                    dueDate,
-                    formattedDueDate: format(dueDate, TIME_FORMAT),
+                    lastCompletedDate,
+                    formattedLastCompletedDate: (lastCompletedDate && format(lastCompletedDate, TIME_FORMAT)) || 'Unknown',
+                    dueDate: null,
+                    formattedDueDate: '',
                     scheduledAt: event.scheduled_at,
                     hasTime: !!event.has_time,
                     when: formatWhen(event),

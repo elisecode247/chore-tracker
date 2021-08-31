@@ -24,19 +24,14 @@ import Switch from '@material-ui/core/Switch';
 import FilterMenu from './FilterMenu';
 import { useGetChoresQuery } from '../../slices/choresApiSlice';
 import { useAddEventMutation, useGetTodayEventsQuery, useUpdateEventMutation } from '../../slices/eventsApiSlice';
+import { useRescheduleChoreMutation } from '../../slices/choresApiSlice';
 import { formatChores, formatEvents } from '../../utilities/chores';
-import format from 'date-fns/format';
 import { DAY_OF_WEEK_AND_DATE } from '../../constants/dateTimeFormats';
+import addDays from 'date-fns/addDays';
+import isToday from 'date-fns/esm/isToday';
+import compareDesc from 'date-fns/compareDesc';
+import format from 'date-fns/format';
 
-function descendingComparator(a, b, orderBy) {
-    if (b[orderBy] < a[orderBy]) {
-        return -1;
-    }
-    if (b[orderBy] > a[orderBy]) {
-        return 1;
-    }
-    return 0;
-}
 
 function getComparator(order, orderBy) {
     return order === 'desc'
@@ -57,10 +52,36 @@ function stableSort(array, comparator) {
 const headCells = [
     { id: 'name', numeric: false, disablePadding: true, label: 'To Do', filter: false },
     { id: 'status', numeric: false, disablePadding: false, label: 'Status', filter: true },
-    { id: 'due', numeric: true, disablePadding: false, label: 'Due', filter: true },
+    { id: 'dueDate', numeric: true, disablePadding: false, label: 'Due', filter: true },
     { id: 'frequency', numeric: false, disablePadding: false, label: 'Frequency', filter: true },
-    { id: 'lastCompleted', numeric: true, disablePadding: false, label: 'Last Done', filter: false },
+    { id: 'lastCompletedDate', numeric: true, disablePadding: false, label: 'Last Done', filter: false },
 ];
+
+const descendingComparator = function (a, b, orderBy) {
+    const dataType = headCells.find(cell => cell.id === orderBy);
+
+    if (dataType.numeric) {
+        if (!a[orderBy] && !b[orderBy]) {
+            return 0;
+        }
+        if (!a[orderBy]) {
+            return -1;
+        }
+        if (!b[orderBy]) {
+            return 1;
+        }
+        return compareDesc(a[orderBy], b[orderBy]);
+    }
+
+    if (b[orderBy] < a[orderBy]) {
+        return -1;
+    }
+    if (b[orderBy] > a[orderBy]) {
+        return 1;
+    }
+
+    return 0;
+};
 
 function EnhancedTableHead(props) {
     const { classes, order, orderBy, onRequestSort, onFilterChange } = props;
@@ -157,16 +178,22 @@ export default function EnhancedTable() {
     const classes = useStyles();
     const [order, setOrder] = React.useState('asc');
     const [orderBy, setOrderBy] = React.useState('name');
-    const [selected, setSelected] = React.useState([]);
+    // const [selected, setSelected] = React.useState([]);
     const [page, setPage] = React.useState(0);
     const [dense, setDense] = React.useState(false);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
     const { data: chores, error: choresError, isLoading: isChoresLoading } = useGetChoresQuery();
     const { data: events, error: eventsError, isLoading: isEventsLoading } = useGetTodayEventsQuery();
+    const [rescheduleChore, { isChoreRescheduleLoading }] = useRescheduleChoreMutation();
     const [addEvent, { isEventAddLoading }] = useAddEventMutation();
     const [updateEvent, { isEventUpdateLoading }] = useUpdateEventMutation();
-
-    const rows = Object.values({ ...formatChores(chores), ...formatEvents(events) });
+    const items = Object.values({ ...formatChores(chores), ...formatEvents(events) });
+    const rows = items.filter(item => {
+        if (item.type === 'event') return true;
+        if (!isToday(new Date(item.scheduledAt))) return false;
+        const foundEvent = items.find(duplicateItem => duplicateItem.type === 'event' && duplicateItem.choreUuid === item.uuid);
+        return !foundEvent;
+    });
 
     const handleRequestSort = (event, property) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -178,20 +205,27 @@ export default function EnhancedTable() {
 
     };
 
-    const handleCompletedEvent = function (eventUuid, choreUuid, status) {
+    const handleCompletedEvent = function (uuid, status) {
         if (status === 'Not yet') {
             addEvent({
-                choreUuid,
+                choreUuid: uuid,
                 status: 'done',
                 completedAt: new Date()
             });
         } else if (status === 'progress') {
             updateEvent({
-                uuid: eventUuid,
+                uuid,
                 status: 'done',
                 completedAt: new Date()
             });
         }
+    };
+
+    const handleRescheduleTomorrowEvent = function (uuid, scheduledAt) {
+        rescheduleChore({
+            uuid,
+            scheduledAt: addDays(new Date(scheduledAt.scheduledAt), 1)
+        });
     };
 
     const handleAddProgressEvent = function (choreUuid) {
@@ -203,23 +237,23 @@ export default function EnhancedTable() {
     };
 
     const handleClick = (event, name) => {
-        const selectedIndex = selected.indexOf(name);
-        let newSelected = [];
+        // const selectedIndex = selected.indexOf(name);
+        // let newSelected = [];
 
-        if (selectedIndex === -1) {
-            newSelected = newSelected.concat(selected, name);
-        } else if (selectedIndex === 0) {
-            newSelected = newSelected.concat(selected.slice(1));
-        } else if (selectedIndex === selected.length - 1) {
-            newSelected = newSelected.concat(selected.slice(0, -1));
-        } else if (selectedIndex > 0) {
-            newSelected = newSelected.concat(
-                selected.slice(0, selectedIndex),
-                selected.slice(selectedIndex + 1),
-            );
-        }
+        // if (selectedIndex === -1) {
+        //     newSelected = newSelected.concat(selected, name);
+        // } else if (selectedIndex === 0) {
+        //     newSelected = newSelected.concat(selected.slice(1));
+        // } else if (selectedIndex === selected.length - 1) {
+        //     newSelected = newSelected.concat(selected.slice(0, -1));
+        // } else if (selectedIndex > 0) {
+        //     newSelected = newSelected.concat(
+        //         selected.slice(0, selectedIndex),
+        //         selected.slice(selectedIndex + 1),
+        //     );
+        // }
 
-        setSelected(newSelected);
+        // setSelected(newSelected);
     };
 
     const handleChangePage = (event, newPage) => {
@@ -235,7 +269,7 @@ export default function EnhancedTable() {
         setDense(event.target.checked);
     };
 
-    const isSelected = (name) => selected.indexOf(name) !== -1;
+    // const isSelected = (name) => selected.indexOf(name) !== -1;
 
     const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows && (rows.length - page * rowsPerPage));
 
@@ -243,7 +277,7 @@ export default function EnhancedTable() {
         return (<div>Error</div>);
     }
 
-    if (isChoresLoading || isEventsLoading || isEventAddLoading || isEventUpdateLoading) {
+    if (isChoresLoading || isEventsLoading || isEventAddLoading || isEventUpdateLoading || isChoreRescheduleLoading) {
         return (<div>Loading...</div>);
     }
 
@@ -265,7 +299,7 @@ export default function EnhancedTable() {
                     >
                         <EnhancedTableHead
                             classes={classes}
-                            numSelected={selected.length}
+                            // numSelected={selected.length}
                             order={order}
                             orderBy={orderBy}
                             onFilterChange={handleFilterChange}
@@ -276,7 +310,7 @@ export default function EnhancedTable() {
                             {stableSort(rows, getComparator(order, orderBy))
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((row, index) => {
-                                    const isItemSelected = isSelected(row.uuid);
+                                    // const isItemSelected = isSelected(row.uuid);
                                     const labelId = `enhanced-table-checkbox-${index}`;
 
                                     return (
@@ -284,24 +318,26 @@ export default function EnhancedTable() {
                                             hover
                                             onClick={(event) => handleClick(event, row.uuid)}
                                             role="checkbox"
-                                            aria-checked={isItemSelected}
+                                            // aria-checked={isItemSelected}
                                             tabIndex={-1}
                                             key={`${row.uuid}`}
-                                            selected={isItemSelected}
+                                        // selected={isItemSelected}
                                         >
                                             <TableCell padding="checkbox">
-                                                <div className={classes.tableCell}>
-                                                    <Tooltip title="Reschedule tomorrow">
-                                                        <IconButton aria-label="Reschedule tomorrow">
-                                                            <WatchLaterIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                    <Tooltip title="Reschedule">
-                                                        <IconButton aria-label="Reschedule">
-                                                            <DateRangeIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                </div>
+                                                {row.type === 'chore' ? (
+                                                    <div className={classes.tableCell}>
+                                                        <Tooltip title="Reschedule tomorrow">
+                                                            <IconButton aria-label="Reschedule tomorrow" onClick={() => handleRescheduleTomorrowEvent(row.uuid, row)}>
+                                                                <WatchLaterIcon />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                        <Tooltip title="Reschedule">
+                                                            <IconButton aria-label="Reschedule">
+                                                                <DateRangeIcon />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    </div>
+                                                ) : null}
                                             </TableCell>
                                             <TableCell component="th" id={labelId} scope="row" padding="none">
                                                 {row.name}
@@ -321,7 +357,7 @@ export default function EnhancedTable() {
                                                     ) : null}
                                                     {row.status !== 'done' ? (
                                                         <Tooltip title="Mark Complete">
-                                                            <IconButton aria-label="Mark Complete" onClick={() => handleCompletedEvent(row.uuid, row.choreUuid, row.status)}>
+                                                            <IconButton aria-label="Mark Complete" onClick={() => handleCompletedEvent(row.uuid, row.status)}>
                                                                 <CheckCircleIcon />
                                                             </IconButton>
                                                         </Tooltip>
