@@ -2,10 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-import DateRangeIcon from '@material-ui/icons/DateRange';
-import TimerIcon from '@material-ui/icons/Timer';
-import WatchLaterIcon from '@material-ui/icons/WatchLater';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -17,21 +13,17 @@ import TableSortLabel from '@material-ui/core/TableSortLabel';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Paper from '@material-ui/core/Paper';
-import IconButton from '@material-ui/core/IconButton';
-import Tooltip from '@material-ui/core/Tooltip';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import FilterMenu from './FilterMenu';
 import { useGetChoresQuery } from '../../slices/choresApiSlice';
-import { useAddEventMutation, useGetTodayEventsQuery, useUpdateEventMutation } from '../../slices/eventsApiSlice';
-import { useRescheduleChoreMutation } from '../../slices/choresApiSlice';
+import { useGetTodayEventsQuery } from '../../slices/eventsApiSlice';
 import { formatChores, formatEvents } from '../../utilities/chores';
 import { DAY_OF_WEEK_AND_DATE } from '../../constants/dateTimeFormats';
-import addDays from 'date-fns/addDays';
 import compareDesc from 'date-fns/compareDesc';
 import format from 'date-fns/format';
 import isToday from 'date-fns/isToday';
-
+import ToDoListItem from './ToDoListItem';
 
 function getComparator(order, orderBy) {
     return order === 'desc'
@@ -189,9 +181,6 @@ export default function EnhancedTable() {
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
     const { data: chores, error: choresError, isLoading: isChoresLoading } = useGetChoresQuery();
     const { data: events, error: eventsError, isLoading: isEventsLoading } = useGetTodayEventsQuery();
-    const [rescheduleChore, { isChoreRescheduleLoading }] = useRescheduleChoreMutation();
-    const [addEvent, { isEventAddLoading }] = useAddEventMutation();
-    const [updateEvent, { isEventUpdateLoading }] = useUpdateEventMutation();
     const items = Object.values({ ...formatChores(chores), ...formatEvents(events) });
     const rows = items.filter(item => {
         if (item.type === 'event') return true;
@@ -210,37 +199,6 @@ export default function EnhancedTable() {
 
     };
 
-    const handleCompletedEvent = function (uuid, status) {
-        if (status === 'Not yet') {
-            addEvent({
-                choreUuid: uuid,
-                status: 'done',
-                completedAt: new Date()
-            });
-        } else if (status === 'progress') {
-            updateEvent({
-                uuid,
-                status: 'done',
-                completedAt: new Date()
-            });
-        }
-    };
-
-    const handleRescheduleTomorrowEvent = function (uuid, scheduledAt) {
-        rescheduleChore({
-            uuid,
-            scheduledAt: addDays(new Date(scheduledAt.scheduledAt), 1)
-        });
-    };
-
-    const handleAddProgressEvent = function (choreUuid) {
-        addEvent({
-            choreUuid,
-            status: 'progress',
-            completedAt: new Date()
-        });
-    };
-
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
     };
@@ -254,16 +212,13 @@ export default function EnhancedTable() {
         setDense(event.target.checked);
     };
 
-    const handleEditCompletedDate = (event, a, b) => {
-    };
-
     const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows && (rows.length - page * rowsPerPage));
 
     if (choresError || eventsError) {
         return (<div>Error</div>);
     }
 
-    if (isChoresLoading || isEventsLoading || isEventAddLoading || isEventUpdateLoading || isChoreRescheduleLoading) {
+    if (isChoresLoading || isEventsLoading) {
         return (<div>Loading...</div>);
     }
 
@@ -294,62 +249,13 @@ export default function EnhancedTable() {
                         <TableBody>
                             {stableSort(rows, getComparator(order, orderBy))
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                .map((row, index) => {
-                                    const labelId = `enhanced-table-checkbox-${index}`;
-
+                                .map((row, key) => {
+                                    const labelId = `enhanced-table-checkbox-${key}`;
                                     return (
-                                        <TableRow
-                                            hover
-                                            role="checkbox"
-                                            tabIndex={-1}
-                                            key={`${row.uuid}`}
-                                        >
-                                            <TableCell padding="checkbox">
-                                                {row.type === 'chore' ? (
-                                                    <div className={classes.tableCell}>
-                                                        <Tooltip title="Reschedule tomorrow">
-                                                            <IconButton aria-label="Reschedule tomorrow" onClick={() => handleRescheduleTomorrowEvent(row.uuid, row)}>
-                                                                <WatchLaterIcon />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                        <Tooltip title="Reschedule">
-                                                            <IconButton aria-label="Reschedule">
-                                                                <DateRangeIcon />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                    </div>
-                                                ) : null}
-                                            </TableCell>
-                                            <TableCell component="th" id={labelId} scope="row" padding="none">
-                                                {row.name}
-                                            </TableCell>
-                                            <TableCell>{row.status}</TableCell>
-                                            <TableCell align="right">{row.formattedDueDate}</TableCell>
-                                            <TableCell>{row.formattedFrequency}</TableCell>
-                                            <TableCell align="right" className={classes.editableTableCell} onClick={(e) => handleEditCompletedDate(e, row.uuid, row.type)}>
-                                                {row.formattedLastCompletedDate}
-                                            </TableCell>
-                                            <TableCell padding="checkbox">
-                                                <div className={classes.tableCell}>
-                                                    {row.status === 'Not yet' ? (
-                                                        <Tooltip title="Set start time now">
-                                                            <IconButton aria-label="Set start time now" onClick={() => handleAddProgressEvent(row.choreUuid)}>
-                                                                <TimerIcon />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                    ) : null}
-                                                    {row.status !== 'done' ? (
-                                                        <Tooltip title="Mark Complete">
-                                                            <IconButton aria-label="Mark Complete" onClick={() => handleCompletedEvent(row.uuid, row.status)}>
-                                                                <CheckCircleIcon />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                    ) : null}
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
+                                        <ToDoListItem key={key} labelId={labelId} row={row} />
                                     );
-                                })}
+                                })
+                            }
                             {emptyRows > 0 && (
                                 <TableRow style={{ height: (dense ? 33 : 53) * emptyRows }}>
                                     <TableCell colSpan={6} />
