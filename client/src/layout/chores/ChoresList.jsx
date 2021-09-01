@@ -7,10 +7,11 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import ChoreListRow from './ChoreListRow';
+import { formatChores } from '../../utilities/chores';
 
 export default function ChoresList() {
     const { data: chores, error, isLoading } = useGetChoresQuery();
-
+    const formattedChores = Object.values(formatChores(chores));
 
     if (error) {
         return (<div>Error</div>);
@@ -34,7 +35,7 @@ export default function ChoresList() {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {chores.map((chore, idx) => {
+                    {formattedChores.map((chore, idx) => {
                         return (<ChoreListRow key={idx} chore={chore} />);
                     })}
                 </TableBody>

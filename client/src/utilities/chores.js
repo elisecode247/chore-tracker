@@ -64,11 +64,7 @@ function getLastCompletedDate(history) {
     return (isValid(completedDate)) ? completedDate : null;
 }
 
-export function formatWhen(chore){
-    /**
-        "scheduled_at": "2021-08-18T01:20:37.000Z",
-        "has_time": false,
-     */
+function formatFrequency(chore){
     /**  @type {{repeatType: String, repeatAmount: Number, repeatSubtype: String}} frequency */
     const frequency = parseFrequency(chore.frequency);
     const scheduledAt = chore.scheduled_at && new Date(chore.scheduled_at);
@@ -88,7 +84,7 @@ export function formatWhen(chore){
         } else if(isAfter(scheduledAt, new Date())) {
             startDate = `starting on ${format(scheduledAt, 'EEEE MMM d, yyyy')}`;
         } else {
-            startDate = '';
+            startDate = ` on ${format(scheduledAt, 'EEEE MMM d, yyyy')}`;
         }
     } else {
         startDate = 'Unknown date';
@@ -151,28 +147,6 @@ export function formatWhen(chore){
     return 'Unknown';
 }
 
-export function formatFrequency(frequency) {
-    if(!frequency) return 'Once';
-    let subtypeString = '';
-
-    if (frequency.repeatType === 'month') {
-        const monthSubTypes = [
-            { label: 'first day of the month', value: 'first' },
-            { label: 'last day of the month', value: 'last' },
-            { label: 'day', value: 'day' },
-            { label: 'date', value: 'date' }
-        ];
-        subtypeString = `on ${monthSubTypes.find(monthSubtype => monthSubtype.value === frequency.repeatSubtype).label}`;
-    }
-    let formattedString = '';
-    if (frequency.repeatType === 'once') {
-        formattedString = 'Once';
-    } else {
-        formattedString = `Every ${frequency.repeatAmount} ${frequency.repeatType} ${subtypeString}`;
-    }
-    return formattedString;
-}
-
 export function formatChores(chores) {
 
     if (!chores || !chores.length) return [];
@@ -187,14 +161,13 @@ export function formatChores(chores) {
                     type: 'chore',
                     uuid: chore.uuid,
                     name: chore.name,
-                    frequency: formatFrequency(parsedFrequency),
                     lastCompletedDate,
                     formattedLastCompletedDate: (lastCompletedDate && format(lastCompletedDate, DATE_AND_TIME_FORMAT)) || 'Unknown',
                     dueDate,
-                    formattedDueDate: format(dueDate, TIME_FORMAT),
+                    formattedDueDate: format(dueDate, DATE_AND_TIME_FORMAT),
                     scheduledAt: chore.scheduled_at,
                     hasTime: chore.hasTime,
-                    when: formatWhen(chore),
+                    formattedFrequency: formatFrequency(chore),
                     reason: chore.reason || '',
                     description: chore.description || '',
                     status: chore.status || 'Not yet',
@@ -210,6 +183,7 @@ export function formatEvents(events) {
         .reduce((eventsObject, event, index) => {
             const parsedFrequency = parseFrequency(event.frequency);
             const lastCompletedDate = (event.completed_at && new Date(event.completed_at)) || null;
+            const dueDate = calculateDueDate(parsedFrequency, lastCompletedDate, event) || null;
             return {
                 ...eventsObject,
                 [`chore-${event.chore_uuid}-${index}`]: {
@@ -217,14 +191,13 @@ export function formatEvents(events) {
                     choreUuid: event.chore_uuid,
                     uuid: event.uuid,
                     name: event.name,
-                    frequency: formatFrequency(parsedFrequency),
                     lastCompletedDate,
-                    formattedLastCompletedDate: (lastCompletedDate && format(lastCompletedDate, TIME_FORMAT)) || 'Unknown',
-                    dueDate: null,
-                    formattedDueDate: '',
+                    formattedLastCompletedDate: (lastCompletedDate && format(lastCompletedDate, DATE_AND_TIME_FORMAT)) || 'Unknown',
+                    dueDate,
+                    formattedDueDate: format(dueDate, DATE_AND_TIME_FORMAT),
                     scheduledAt: event.scheduled_at,
                     hasTime: !!event.has_time,
-                    when: formatWhen(event),
+                    formattedFrequency: formatFrequency(event),
                     reason: event.reason || '',
                     description: event.description || '',
                     status: event.status || 'Not yet',

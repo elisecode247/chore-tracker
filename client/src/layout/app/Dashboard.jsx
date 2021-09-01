@@ -3,7 +3,7 @@ import DashboardBar from './DashboardBar';
 import ChoreListBar from '../chores/ChoreListBar';
 import ChoresList from '../chores/ChoresList';
 import EventsList from '../events/EventsList';
-import ToDoList from '../todo/ToDoList';
+import ToDoList from '../agenda/ToDoList';
 import Paper from '@material-ui/core/Paper';
 import TabPanel from './TabPanel';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';

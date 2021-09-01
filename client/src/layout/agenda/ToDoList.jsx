@@ -28,7 +28,6 @@ import { useRescheduleChoreMutation } from '../../slices/choresApiSlice';
 import { formatChores, formatEvents } from '../../utilities/chores';
 import { DAY_OF_WEEK_AND_DATE } from '../../constants/dateTimeFormats';
 import addDays from 'date-fns/addDays';
-import isToday from 'date-fns/esm/isToday';
 import compareDesc from 'date-fns/compareDesc';
 import format from 'date-fns/format';
 
@@ -190,7 +189,6 @@ export default function EnhancedTable() {
     const items = Object.values({ ...formatChores(chores), ...formatEvents(events) });
     const rows = items.filter(item => {
         if (item.type === 'event') return true;
-        if (!isToday(new Date(item.scheduledAt))) return false;
         const foundEvent = items.find(duplicateItem => duplicateItem.type === 'event' && duplicateItem.choreUuid === item.uuid);
         return !foundEvent;
     });
@@ -344,7 +342,7 @@ export default function EnhancedTable() {
                                             </TableCell>
                                             <TableCell>{row.status}</TableCell>
                                             <TableCell align="right">{row.formattedDueDate}</TableCell>
-                                            <TableCell>{row.when}</TableCell>
+                                            <TableCell>{row.formattedFrequency}</TableCell>
                                             <TableCell align="right">{row.formattedLastCompletedDate}</TableCell>
                                             <TableCell padding="checkbox">
                                                 <div className={classes.tableCell}>

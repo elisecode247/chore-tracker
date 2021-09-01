@@ -17,7 +17,6 @@ import EditIcon from '@material-ui/icons/Edit';
 import Chip from '@material-ui/core/Chip';
 import useStyles from './ChoresListRowStyles';
 import { DATE_FORMAT } from '../../constants/dateTimeFormats';
-import { formatWhen } from '../../utilities/chores';
 
 export default function Row({ chore }) {
     const [open, setOpen] = useState(false);
@@ -35,7 +34,7 @@ export default function Row({ chore }) {
                     <FiberManualRecordIcon className={chore.enabled ? classes.enabled : classes.disabled} />
                 </TableCell>
                 <TableCell>{chore.name}</TableCell>
-                <TableCell>{formatWhen(chore)}</TableCell>
+                <TableCell>{chore.formattedFrequency}</TableCell>
                 <TableCell>{chore.tags ? chore.tags.map((tag, idx) => (<Chip key={idx} label={tag.name} variant="outlined" />)) : ''}</TableCell>
                 <TableCell align="right">
                     <Button className={classes.editButton} onClick={()=> alert('Under Construction')} ><EditIcon /></Button>
