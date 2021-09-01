@@ -12,10 +12,13 @@ import { useRescheduleChoreMutation } from '../../slices/choresApiSlice';
 import addDays from 'date-fns/addDays';
 import { makeStyles } from '@material-ui/core/styles';
 import {
+    KeyboardTimePicker,
+    KeyboardDatePicker,
     KeyboardDateTimePicker
 } from '@material-ui/pickers';
 import SaveIcon from '@material-ui/icons/Save';
 import UndoIcon from '@material-ui/icons/Undo';
+import formatScheduledAt from '../../utilities/formatScheduledAt';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -70,8 +73,11 @@ const ToDoItem = function ({ row, labelId }) {
     const [rescheduleChore, { isChoreRescheduleLoading }] = useRescheduleChoreMutation();
     const [addEvent, { isEventAddLoading }] = useAddEventMutation();
     const [updateEvent, { isEventUpdateLoading }] = useUpdateEventMutation();
+    const [editChoreDate, setEditChoreDate] = useState(false);
     const [editEventDate, setEditEventDate] = useState(false);
     const [completedDateTime, setCompletedDateTime] = useState(new Date(row.scheduledAt));
+    const [startDate, setStartDate] = useState(new Date(row.scheduledAt));
+    const [startTime, setStartTime] = useState(new Date(row.scheduledAt));
 
     const handleCompletedEvent = function (uuid, status) {
         if (status === 'Not yet') {
@@ -92,7 +98,7 @@ const ToDoItem = function ({ row, labelId }) {
     const handleRescheduleTomorrowEvent = function (uuid, scheduledAt) {
         rescheduleChore({
             uuid,
-            scheduledAt: addDays(new Date(scheduledAt.scheduledAt), 1)
+            scheduledAt: addDays(new Date(), 1)
         });
     };
 
@@ -111,6 +117,18 @@ const ToDoItem = function ({ row, labelId }) {
             completedAt: completedDateTime
         });
         setEditEventDate(false);
+    };
+
+    const handleChoreStartDate = () => {
+        const hasTime = row.hasTime;
+        const scheduledAt = formatScheduledAt(startDate, hasTime && startTime);
+
+        rescheduleChore({
+            uuid: row.uuid,
+            scheduledAt
+        });
+        setEditChoreDate(false);
+
     };
 
     if (isEventAddLoading || isEventUpdateLoading || isChoreRescheduleLoading) {
@@ -133,11 +151,51 @@ const ToDoItem = function ({ row, labelId }) {
                             </IconButton>
                         </Tooltip>
                         <Tooltip title="Reschedule">
-                            <IconButton aria-label="Reschedule">
+                            <IconButton aria-label="Reschedule" className={classes.editableTableCell} onClick={() => setEditChoreDate(true)}>
                                 <DateRangeIcon />
                             </IconButton>
                         </Tooltip>
                     </div>
+                ) : null}
+                {editChoreDate ? (
+                    <>
+                        <KeyboardDatePicker
+                            disableToolbar
+                            variant="inline"
+                            format="MM/dd/yyyy"
+                            margin="normal"
+                            id="scheduled-chore-date-local"
+                            label="Starting Date"
+                            value={startDate}
+                            onChange={setStartDate}
+                            KeyboardButtonProps={{
+                                'aria-label': 'change date',
+                            }}
+                        />
+                        {row.hasTime ? (
+                            <KeyboardTimePicker
+                                margin="normal"
+                                id="scheduled-chore-time-local"
+                                label="Starting Time"
+                                value={startTime}
+                                onChange={setStartTime}
+                                KeyboardButtonProps={{
+                                    'aria-label': 'change time',
+                                }}
+                                variant="inline"
+                            />
+                        ) : null}
+                        <Tooltip title="Undo">
+                            <IconButton onClick={()=> setEditChoreDate(false)}>
+                                <UndoIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Save Reschedule">
+                            <IconButton aria-label="Update Chore Start Date" onClick={() => handleChoreStartDate(row.uuid, row.status)}>
+                                <CheckCircleIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </>
                 ) : null}
             </TableCell>
             <TableCell component="th" id={labelId} scope="row" padding="none">
