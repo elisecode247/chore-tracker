@@ -13,7 +13,7 @@ function parseFrequency(frequency) {
     }
 }
 
-function calculateDueDate(frequency, lastCompletedDate, chore) {
+export function calculateDueDate(frequency, lastCompletedDate, chore) {
     const scheduledAt = new Date(chore.scheduled_at);
     const today = new Date();
     if(!frequency && isValid(scheduledAt)) return scheduledAt;

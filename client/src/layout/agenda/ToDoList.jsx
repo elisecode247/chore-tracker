@@ -30,6 +30,7 @@ import { DAY_OF_WEEK_AND_DATE } from '../../constants/dateTimeFormats';
 import addDays from 'date-fns/addDays';
 import compareDesc from 'date-fns/compareDesc';
 import format from 'date-fns/format';
+import isToday from 'date-fns/isToday';
 
 
 function getComparator(order, orderBy) {
@@ -160,6 +161,12 @@ const useStyles = makeStyles((theme) => ({
     tableCell: {
         display: 'flex'
     },
+    editableTableCell: {
+        '&:hover': {
+            color: 'orange',
+            cursor: 'pointer'
+        }
+    },
     visuallyHidden: {
         border: 0,
         clip: 'rect(0 0 0 0)',
@@ -177,7 +184,6 @@ export default function EnhancedTable() {
     const classes = useStyles();
     const [order, setOrder] = React.useState('asc');
     const [orderBy, setOrderBy] = React.useState('name');
-    // const [selected, setSelected] = React.useState([]);
     const [page, setPage] = React.useState(0);
     const [dense, setDense] = React.useState(false);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -189,6 +195,7 @@ export default function EnhancedTable() {
     const items = Object.values({ ...formatChores(chores), ...formatEvents(events) });
     const rows = items.filter(item => {
         if (item.type === 'event') return true;
+        if (!isToday(item.dueDate)) return false;
         const foundEvent = items.find(duplicateItem => duplicateItem.type === 'event' && duplicateItem.choreUuid === item.uuid);
         return !foundEvent;
     });
@@ -234,26 +241,6 @@ export default function EnhancedTable() {
         });
     };
 
-    const handleClick = (event, name) => {
-        // const selectedIndex = selected.indexOf(name);
-        // let newSelected = [];
-
-        // if (selectedIndex === -1) {
-        //     newSelected = newSelected.concat(selected, name);
-        // } else if (selectedIndex === 0) {
-        //     newSelected = newSelected.concat(selected.slice(1));
-        // } else if (selectedIndex === selected.length - 1) {
-        //     newSelected = newSelected.concat(selected.slice(0, -1));
-        // } else if (selectedIndex > 0) {
-        //     newSelected = newSelected.concat(
-        //         selected.slice(0, selectedIndex),
-        //         selected.slice(selectedIndex + 1),
-        //     );
-        // }
-
-        // setSelected(newSelected);
-    };
-
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
     };
@@ -267,7 +254,8 @@ export default function EnhancedTable() {
         setDense(event.target.checked);
     };
 
-    // const isSelected = (name) => selected.indexOf(name) !== -1;
+    const handleEditCompletedDate = (event, a, b) => {
+    };
 
     const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows && (rows.length - page * rowsPerPage));
 
@@ -297,7 +285,6 @@ export default function EnhancedTable() {
                     >
                         <EnhancedTableHead
                             classes={classes}
-                            // numSelected={selected.length}
                             order={order}
                             orderBy={orderBy}
                             onFilterChange={handleFilterChange}
@@ -308,18 +295,14 @@ export default function EnhancedTable() {
                             {stableSort(rows, getComparator(order, orderBy))
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((row, index) => {
-                                    // const isItemSelected = isSelected(row.uuid);
                                     const labelId = `enhanced-table-checkbox-${index}`;
 
                                     return (
                                         <TableRow
                                             hover
-                                            onClick={(event) => handleClick(event, row.uuid)}
                                             role="checkbox"
-                                            // aria-checked={isItemSelected}
                                             tabIndex={-1}
                                             key={`${row.uuid}`}
-                                        // selected={isItemSelected}
                                         >
                                             <TableCell padding="checkbox">
                                                 {row.type === 'chore' ? (
@@ -343,7 +326,9 @@ export default function EnhancedTable() {
                                             <TableCell>{row.status}</TableCell>
                                             <TableCell align="right">{row.formattedDueDate}</TableCell>
                                             <TableCell>{row.formattedFrequency}</TableCell>
-                                            <TableCell align="right">{row.formattedLastCompletedDate}</TableCell>
+                                            <TableCell align="right" className={classes.editableTableCell} onClick={(e) => handleEditCompletedDate(e, row.uuid, row.type)}>
+                                                {row.formattedLastCompletedDate}
+                                            </TableCell>
                                             <TableCell padding="checkbox">
                                                 <div className={classes.tableCell}>
                                                     {row.status === 'Not yet' ? (
