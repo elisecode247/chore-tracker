@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { makeStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -22,7 +22,6 @@ import { formatChores, formatEvents } from '../../utilities/chores';
 import { DAY_OF_WEEK_AND_DATE } from '../../constants/dateTimeFormats';
 import compareDesc from 'date-fns/compareDesc';
 import format from 'date-fns/format';
-import isToday from 'date-fns/isToday';
 import ToDoListItem from './ToDoListItem';
 
 function getComparator(order, orderBy) {
@@ -184,7 +183,6 @@ export default function EnhancedTable() {
     const items = Object.values({ ...formatChores(chores), ...formatEvents(events) });
     const rows = items.filter(item => {
         if (item.type === 'event') return true;
-        if (!isToday(item.dueDate)) return false;
         const foundEvent = items.find(duplicateItem => duplicateItem.type === 'event' && duplicateItem.choreUuid === item.uuid);
         return !foundEvent;
     });

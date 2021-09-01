@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useAddChoreMutation } from '../../slices/choresApiSlice';
 import { useGetTagsQuery } from '../../slices/tagsApiSlice';
-import { makeStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import AddIcon from '@material-ui/icons/Add';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
-import { Chip } from '@material-ui/core';
+import Chip from '@material-ui/core/Chip';
 import Container from '@material-ui/core/Container';
 import Fab from '@material-ui/core/Fab';
 import FormControl from '@material-ui/core/FormControl';
@@ -20,7 +20,7 @@ import { defaultDescription } from '../../constants/defaultValues';
 import styles from '../../styles';
 import {
     KeyboardTimePicker,
-    KeyboardDatePicker,
+    KeyboardDatePicker
 } from '@material-ui/pickers';
 import formatScheduledAt from '../../utilities/formatScheduledAt';
 
@@ -344,13 +344,13 @@ function getFrequencySubTypeOptions(frequencyType) {
         ];
     case 'week':
         return [
-            { label: 'S', value: 'sunday' },
-            { label: 'M', value: 'monday' },
-            { label: 'T', value: 'tuesday' },
-            { label: 'W', value: 'wednesday' },
-            { label: 'Th', value: 'thursday' },
-            { label: 'F', value: 'friday' },
-            { label: 'S', value: 'saturday' },
+            { label: 'S', value: 0 },
+            { label: 'M', value: 1 },
+            { label: 'T', value: 2 },
+            { label: 'W', value: 3 },
+            { label: 'Th', value: 4 },
+            { label: 'F', value: 5 },
+            { label: 'S', value: 6 },
         ];
     case 'month':
         return [

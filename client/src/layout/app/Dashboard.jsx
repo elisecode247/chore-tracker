@@ -6,7 +6,7 @@ import EventsList from '../events/EventsList';
 import ToDoList from '../agenda/ToDoList';
 import Paper from '@material-ui/core/Paper';
 import TabPanel from './TabPanel';
-import { MuiPickersUtilsProvider } from '@material-ui/pickers';
+import MuiPickersUtilsProvider from '@material-ui/pickers/MuiPickersUtilsProvider';
 import DateFnsUtils from '@date-io/date-fns';
 import { useHistory } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';

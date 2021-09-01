@@ -10,7 +10,7 @@ import Tooltip from '@material-ui/core/Tooltip';
 import { useAddEventMutation, useUpdateEventMutation } from '../../slices/eventsApiSlice';
 import { useRescheduleChoreMutation } from '../../slices/choresApiSlice';
 import addDays from 'date-fns/addDays';
-import { makeStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import {
     KeyboardTimePicker,
     KeyboardDatePicker,
