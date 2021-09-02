@@ -3,6 +3,7 @@ export const DATE_FORMAT = 'MM/dd/yy';
 export const DATE_INPUT = 'MM/dd/yy';
 export const DATE_TIME_INPUT_FORMAT = `yyyy-MM-dd${'\'T\''}HH:mm:ss`;
 export const DAY_OF_WEEK_AND_DATE = 'EEEE MMM dd, yyyy';
+export const DAY_OF_WEEK_AND_DATE_AND_TIME = 'EEEE MMM dd, yyyy hh:mm aaa';
 export const TIME_FORMAT = 'h:mm aaa';
 export const TIME_INPUT = 'HH:mm:ss';
 

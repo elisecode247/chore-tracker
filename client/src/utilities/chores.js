@@ -1,4 +1,7 @@
 import addDays from 'date-fns/addDays';
+import addMonths from 'date-fns/addMonths';
+import differenceInDays from 'date-fns/differenceInDays';
+import endOfDay from 'date-fns/endOfDay';
 import isValid from 'date-fns/isValid';
 import isAfter from 'date-fns/isAfter';
 import isBefore from 'date-fns/isBefore';
@@ -9,10 +12,30 @@ import getMinutes from 'date-fns/getMinutes';
 import isTomorrow from 'date-fns/isTomorrow';
 import isThisMonth from 'date-fns/isThisMonth';
 import set from 'date-fns/set';
+import startOfDay from 'date-fns/startOfDay';
 import startOfMonth from 'date-fns/startOfMonth';
 import isToday from 'date-fns/isToday';
-import { DATE_AND_TIME_FORMAT, DATE_FORMAT, TIME_FORMAT } from '../constants/dateTimeFormats';
+import {
+    DATE_AND_TIME_FORMAT,
+    DATE_FORMAT,
+    DAY_OF_WEEK_AND_DATE,
+    DAY_OF_WEEK_AND_DATE_AND_TIME,
+    TIME_FORMAT
+} from '../constants/dateTimeFormats';
+import { endOfMonth } from 'date-fns';
 
+function getDayOfWeekLabel(d) {
+    switch(parseInt(d)){
+    case 0: return 'Sunday';
+    case 1: return 'Monday';
+    case 2: return 'Tuesday';
+    case 3: return 'Wednesday';
+    case 4: return 'Thursday';
+    case 5: return 'Friday';
+    case 6: return 'Saturday';
+    default: return '';
+    }
+}
 function parseFrequency(frequency) {
     if (!frequency) return null;
     try {
@@ -23,63 +46,107 @@ function parseFrequency(frequency) {
 }
 
 export function calculateDueDate(frequency, lastCompletedDate, chore) {
-    const scheduledAt = new Date(chore.scheduled_at);
     const today = new Date();
-    if (!frequency && isValid(scheduledAt)) return scheduledAt;
-    if (!frequency && isValid(scheduledAt)) return today;
+    const startOfToday = startOfDay(today);
+    const scheduledAt = new Date(chore.scheduled_at);
+    const scheduledTime = isValid(scheduledAt) ? { hours: getHours(scheduledAt), minutes: getMinutes(scheduledAt) } :
+        { hours: getHours(today), minutes: getMinutes(today) };
+    const scheduledDateTime = !isValid(scheduledAt) ? null : (chore.has_time ? set(scheduledAt, scheduledTime) : startOfDay(scheduledAt));
+    const scheduledToday = chore.has_time ? set(today, scheduledTime) : startOfToday;
+
+    if (!frequency) return scheduledDateTime;
     if (frequency.repeatType === 'once') {
-        return scheduledAt;
+        return scheduledDateTime;
     }
     if (frequency.repeatType === 'day') {
-        if (!lastCompletedDate && (isBefore(scheduledAt, today) || isToday(scheduledAt))) {
-            return scheduledAt;
-        } else if (isAfter(scheduledAt, today)) {
-            return scheduledAt;
-        } else if (isBefore(lastCompletedDate, today)) {
-            return today;
-        } else if (isToday(lastCompletedDate)) {
-            return addDays(new Date(), 1);
-        } else if (isAfter(lastCompletedDate, today)) {
-            return scheduledAt;
+        if (isAfter(scheduledDateTime, endOfDay(today))) {
+            return scheduledDateTime;
+        } else if (!lastCompletedDate) {
+            return scheduledToday;
         } else {
-            return today;
+            let diff = frequency.repeatAmount - differenceInDays(startOfToday, startOfDay(lastCompletedDate));
+            return addDays(scheduledToday, diff > 0 ? diff : 0);
         }
     }
     if (frequency.repeatType === 'week') {
-        let dayOfWeek = parseInt(getDay(today));
-        if (frequency.repeatSubtype.includes(dayOfWeek)) {
-            if(chore.has_time) {
-                let result = set(today, { hours: getHours(scheduledAt), minutes: getMinutes(scheduledAt) });
-                return result;
-            } else {
-                return today;
+        const scheduledDaysOfWeek = frequency.repeatSubtype.map(d => parseInt(d)).sort();
+        let dayOfWeek = getDay(today);
+        if (isToday(scheduledDateTime) || isAfter(scheduledDateTime, endOfDay(today))) {
+            if (!scheduledDaysOfWeek.length) {
+                return scheduledDateTime;
             }
+            let dateCounter = lastCompletedDate && isToday(lastCompletedDate) ? addDays(startOfToday, 1) : scheduledDateTime;
+            let dayFound = false;
+            while (!dayFound) {
+                if(scheduledDaysOfWeek.includes(getDay(dateCounter))){
+                    dayFound = true;
+                } else {
+                    dateCounter = addDays(dateCounter,1);
+                }
+            }
+            return dateCounter;
+        } else if (!lastCompletedDate && !scheduledDaysOfWeek.length) {
+            return scheduledToday;
+        } else if (lastCompletedDate && !scheduledDaysOfWeek.length) {
+            let dueDate = addDays(lastCompletedDate, (7 * frequency.repeatAmount));
+            return isBefore(dueDate, startOfToday) ? scheduledToday : dueDate;
+        } else if (!lastCompletedDate && scheduledDaysOfWeek.length) {
+            let dateCounter = scheduledToday;
+            let dayFound = false;
+            while (!dayFound) {
+                if(scheduledDaysOfWeek.includes(dayOfWeek(dateCounter))){
+                    dayFound = true;
+                } else {
+                    dateCounter = addDays(dateCounter,1);
+                }
+            }
+            return dateCounter;
+        } else if (lastCompletedDate && scheduledDaysOfWeek.length) {
+            let dateCounter = isToday(lastCompletedDate) ? addDays(lastCompletedDate, 1) : lastCompletedDate;
+            let dayFound = false;
+            while (!dayFound) {
+                if(scheduledDaysOfWeek.includes(getDay(dateCounter))){
+                    dayFound = true;
+                } else {
+                    dateCounter = addDays(dateCounter,1);
+                }
+            }
+            return dateCounter;
         } else {
-            if(chore.has_time) {
-                let result = set(today, { hours: getHours(scheduledAt), minutes: getMinutes(scheduledAt) });
-                return result;
-            } else {
-                return today;
-            }
+            return null;
         }
     }
     if (frequency.repeatType === 'month') {
         if (frequency.repeatSubtype === 'first') {
-            // if scheduledAt is after today, return scheduledAt
-            if (isAfter(scheduledAt, today)) return scheduledAt;
-            // if scheduledAt is before or today and lastCompletedAt is this month return tomorrow
-            if ((isBefore(scheduledAt, today) || isToday(scheduledAt)) && isThisMonth(lastCompletedDate)) {
-                return addDays(today, 1);
+            if (!lastCompletedDate && isAfter(scheduledDateTime, endOfDay(scheduledToday))) {
+                return startOfMonth(scheduledDateTime);
+            } else if (!lastCompletedDate && !isAfter(scheduledDateTime, endOfDay(scheduledToday))) {
+                return scheduledToday;
+            } else if(isAfter(scheduledDateTime, endOfMonth(scheduledToday))) {
+                return startOfMonth(scheduledDateTime);
+            } else if (isThisMonth(lastCompletedDate)) {
+                return addMonths(startOfMonth(lastCompletedDate), frequency.repeatAmount);
+            } else {
+                const dueDate = addMonths(startOfMonth(lastCompletedDate), frequency.repeatAmount);
+                return isBefore(dueDate, scheduledToday) ? scheduledToday : dueDate;
             }
-            if ((isBefore(chore.scheduledAt, today) || isToday(scheduledAt)) && isBefore(lastCompletedDate, startOfMonth(today))) {
-                return startOfMonth(today);
-            }
+        } else {
+            // TO DO needs more options
+            return scheduledDateTime;
         }
     }
     if (frequency.repeatType === 'year') {
-        return scheduledAt;
+        return scheduledDateTime;
     }
     return today;
+}
+
+function formatDueDate(dueDate, chore) {
+    if(!dueDate || !isValid(dueDate)) return 'Unknown error';
+    if(isToday(dueDate)){
+        return chore.has_time ? format(dueDate, TIME_FORMAT) : 'Today';
+    }
+    return chore.has_time ? format(dueDate, DAY_OF_WEEK_AND_DATE_AND_TIME) : format(dueDate, DAY_OF_WEEK_AND_DATE);
 }
 
 function getLastCompletedDate(history) {
@@ -126,24 +193,22 @@ function formatFrequency(chore) {
         } else {
             when = `Every ${repeatAmount} days`;
         }
-        when += ` ${startTime} ${startDate}`;
+        if(isAfter(scheduledAt, startOfDay(new Date()))) {
+            when += ` ${startTime} ${startDate}`;
+        }
         return when;
     }
 
     if (repeatType === 'week') {
         when = `Every ${repeatAmount <= 1 ? '' : repeatAmount} week`;
-        // TO DO where I left off. AddChoreModal doesn't capture days of the week
-        if (startDate) {
-            when += ` ${startDate}`;
-        }
         if (hasTime) {
             when += ` ${startTime}`;
         }
-        if (repeatSubtype && Array.isArray(repeatSubtype)) {
-            when += ` on ${repeatSubtype.join(', ')}`;
+        if (isAfter(scheduledAt, startOfDay(new Date()))) {
+            when += ` ${startDate}`;
         }
-        if (repeatSubtype && typeof repeatSubtype === 'string') {
-            when += ` on ${repeatSubtype}`;
+        if (repeatSubtype.length) {
+            when += ` on ${repeatSubtype.sort().map(d => getDayOfWeekLabel(d)).join(', ')}`;
         }
         return when;
     }
@@ -178,6 +243,7 @@ export function formatChores(chores) {
             const parsedFrequency = parseFrequency(chore.frequency);
             const lastCompletedDate = getLastCompletedDate(chore.history) || null;
             const dueDate = calculateDueDate(parsedFrequency, lastCompletedDate, chore);
+            const formattedDueDate = formatDueDate(dueDate, chore);
             return {
                 ...choreObject,
                 [`chore-${chore.uuid}-0`]: {
@@ -187,7 +253,7 @@ export function formatChores(chores) {
                     lastCompletedDate,
                     formattedLastCompletedDate: (lastCompletedDate && format(lastCompletedDate, DATE_AND_TIME_FORMAT)) || 'Unknown',
                     dueDate,
-                    formattedDueDate: format(dueDate, DATE_AND_TIME_FORMAT),
+                    formattedDueDate,
                     scheduledAt: chore.scheduled_at,
                     hasTime: !!(chore.has_time),
                     formattedFrequency: formatFrequency(chore),
@@ -207,6 +273,7 @@ export function formatEvents(events) {
             const parsedFrequency = parseFrequency(event.frequency);
             const lastCompletedDate = (event.completed_at && new Date(event.completed_at)) || null;
             const dueDate = calculateDueDate(parsedFrequency, lastCompletedDate, event) || null;
+
             return {
                 ...eventsObject,
                 [`chore-${event.chore_uuid}-${index}`]: {
@@ -217,7 +284,7 @@ export function formatEvents(events) {
                     lastCompletedDate,
                     formattedLastCompletedDate: (lastCompletedDate && format(lastCompletedDate, DATE_AND_TIME_FORMAT)) || 'Unknown',
                     dueDate,
-                    formattedDueDate: format(dueDate, DATE_AND_TIME_FORMAT),
+                    formattedDueDate: formatDueDate(dueDate, event),
                     scheduledAt: event.scheduled_at,
                     hasTime: !!(event.has_time),
                     formattedFrequency: formatFrequency(event),
