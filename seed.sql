@@ -54,6 +54,7 @@ CREATE TABLE "event" (
 
 CREATE TABLE "tag" (
   "id" SERIAL PRIMARY KEY,
+  "user_id" int NOT NULL,
   "enabled" boolean DEFAULT true,
   "uuid" uuid DEFAULT uuid_generate_v4 (),
   "name" varchar,
@@ -71,6 +72,7 @@ CREATE TABLE chore_tag(
 ALTER TABLE "chore" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
 ALTER TABLE "event" ADD FOREIGN KEY ("chore_id") REFERENCES "chore" ("id");
 ALTER TABLE "event" ADD FOREIGN KEY ("completed_by") REFERENCES "user" ("id");
+ALTER TABLE "tag" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
 
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$
@@ -111,16 +113,16 @@ VALUES (
   '{"repeatType":"month","repeatAmount":1,"repeatSubtype":"first"}'
   );
 
-INSERT INTO "tag" as t (name, description)
+INSERT INTO "tag" as t (user_id, name, description)
 VALUES
-  ('Maggie', ''),
-  ('Finnley', ''),
-  ('David', ''),
-  ('Dogs', 'for all dogs'),
-  ('cleaning', ''),
-  ('shopping', ''),
-  ('cooking', ''),
-  ('medical', '');
+  (1, 'Maggie', ''),
+  (1, 'Finnley', ''),
+  (1, 'David', ''),
+  (1, 'Dogs', 'for all dogs'),
+  (1, 'cleaning', ''),
+  (1, 'shopping', ''),
+  (1, 'cooking', ''),
+  (1, 'medical', '');
 
 INSERT INTO "chore_tag" as ct (chore_id, tag_id)
 VALUES (1, 1);
