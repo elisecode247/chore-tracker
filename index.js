@@ -45,7 +45,7 @@ app.post('/api/v1/auth/local',
         passport.authenticate('local', function (err, user, _info, _status) {
             if (err) return res.send({ success: false, errorMessage: 'A server error occurred. Try again later' });
             if (!user) return res.send({ success: false, errorMessage: 'User does not exist.' });
-            res.send({ success: true, data: {user, token: jwt.sign({ user }, accessTokenSecret)}});
+            res.send({ success: true, data: {user, token: jwt.sign(user, accessTokenSecret)}});
         })(req, res, next);
     }
 );
@@ -56,7 +56,7 @@ app.get('/api/v1/journal/today', verifyToken, async (req, res) => {
             SELECT j.uuid, j.entry, j.entry_date
             FROM journal as j
             INNER JOIN "user" as u ON j.user_id = u.id
-            WHERE u.id = 1 AND DATE(j.entry_date) = CURRENT_DATE
+            WHERE u.uuid = '${req.user.uuid}' AND DATE(j.entry_date) = CURRENT_DATE
             `, (err, results) => {
             if (err) throw err;
             res.send({ success: true, data: results.rows });
@@ -74,7 +74,7 @@ app.post('/api/v1/journal', verifyToken, async (req, res) => {
             entry_date
         )
         VALUES (
-            1,
+            '${req.user.uuid}',
             '${req.body.entry}',
             '${req.body.entryDate}'
         )
@@ -148,8 +148,7 @@ app.get('/api/v1/chores', verifyToken, async (req, res) => {
                     ) e
                 ) as history
             FROM chore as c
-            INNER JOIN "user" as u ON c.user_id = u.id
-            WHERE u.id = 1
+            WHERE c.user_id = (SELECT id FROM "user" WHERE uuid = '${req.user.uuid}')
             `, (err, results) => {
             if (err) throw err;
             res.send({ success: true, data: results.rows });
@@ -173,7 +172,7 @@ app.post('/api/v1/chores', verifyToken, async (req, res) => {
                 reason
             )
             VALUES (
-                1,
+                '${req.user.uuid}',
                 '${req.body.name}',
                 '${req.body.description}',
                 '${req.body.frequency}',
@@ -227,7 +226,6 @@ app.put('/api/v1/chores', verifyToken, async (req, res) => {
         const queryString = `
             UPDATE "chore"
             SET
-                user_id = 1,
                 name = '${req.body.name}',
                 description = '${req.body.description}',
                 frequency = '${req.body.frequency}',
@@ -259,13 +257,14 @@ app.get('/api/v1/events/incomplete', verifyToken, async (req, res) => {
                 e.notes
             FROM event as e
             INNER JOIN chore as c ON e.chore_id = c.id
-            WHERE status != 'done'
+            WHERE
+                status != 'done' AND
+                c.user_id = (SELECT id FROM "user" WHERE uuid = '${req.user.uuid}')
         `, (err, results) => {
             if (err) throw err;
             res.send({ success: true, data: results.rows });
         });
     } catch (err) {
-
         res.send('Error ' + err);
     }
 });
@@ -300,7 +299,7 @@ app.get('/api/v1/events/today', verifyToken, async (req, res) => {
             FROM event as e
             INNER JOIN chore as c ON e.chore_id = c.id
             WHERE
-                c.user_id = 1 AND
+                c.user_id = (SELECT id as id FROM "user" WHERE uuid = '${req.user.uuid}') AND
                 ((status = 'done' AND DATE(e.completed_at) = CURRENT_DATE) OR
                 (status IS NOT NULL AND status != 'done'))
         `, (err, results) => {
@@ -319,7 +318,9 @@ app.get('/api/v1/events', verifyToken, async (req, res) => {
             SELECT e.*, c.*
             FROM event as e
             INNER JOIN chore as c ON e.chore_id = c.id
-            WHERE status = 'done'
+            WHERE
+                status = 'done' AND
+                c.user_id = (SELECT id as id FROM "user" WHERE uuid = '${req.user.uuid}')
         `, (err, results) => {
             if (err) throw err;
             res.send({ success: true, data: results.rows });
@@ -400,7 +401,7 @@ app.get('*', (req, res) => {
 });
 
 app.listen(port, () => {
-    console.info(`Example app listening at http://localhost:${port}`);
+    console.info(`App listening at port ${port}`);
 });
 
 function verifyToken (req, res, next) {
@@ -409,7 +410,7 @@ function verifyToken (req, res, next) {
     jwt.verify(bearerToken, accessTokenSecret, (err, user) => {
         if (err) return res.sendStatus(403);
         req.token = bearerToken;
-        req.user = user;
+        req.user = {uuid: user.uuid};
         next();
     });
 }
