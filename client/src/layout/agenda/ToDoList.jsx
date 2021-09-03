@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import clsx from 'clsx';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -10,18 +9,13 @@ import TableHead from '@material-ui/core/TableHead';
 import TablePagination from '@material-ui/core/TablePagination';
 import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
-import Paper from '@material-ui/core/Paper';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import FilterMenu from './FilterMenu';
 import { useGetChoresQuery } from '../../slices/choresApiSlice';
 import { useGetTodayEventsQuery } from '../../slices/eventsApiSlice';
 import { formatChores, formatEvents } from '../../utilities/chores';
-import { DAY_OF_WEEK_AND_DATE } from '../../constants/dateTimeFormats';
 import compareDesc from 'date-fns/compareDesc';
-import format from 'date-fns/format';
 import ToDoListItem from './ToDoListItem';
 
 function getComparator(order, orderBy) {
@@ -221,57 +215,49 @@ export default function EnhancedTable() {
     }
 
     return (
-        <div className={classes.root}>
-            <Paper className={classes.paper}>
-                <Toolbar className={clsx(classes.root)}>
-                    <Typography className={classes.h1} variant="h1" id="tableTitle" component="div">
-                        Agenda
-                        <span className={classes.h1Subtitle}>{format(new Date(), DAY_OF_WEEK_AND_DATE)}</span>
-                    </Typography>
-                </Toolbar>
-                <TableContainer>
-                    <Table
-                        className={classes.table}
-                        aria-labelledby="tableTitle"
-                        size={dense ? 'small' : 'medium'}
-                        aria-label="enhanced table"
-                    >
-                        <EnhancedTableHead
-                            classes={classes}
-                            order={order}
-                            orderBy={orderBy}
-                            onFilterChange={handleFilterChange}
-                            onRequestSort={handleRequestSort}
-                            rowCount={rows.length}
-                        />
-                        <TableBody>
-                            {stableSort(rows, getComparator(order, orderBy))
-                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                .map((row, key) => {
-                                    const labelId = `enhanced-table-checkbox-${key}`;
-                                    return (
-                                        <ToDoListItem key={key} labelId={labelId} row={row} />
-                                    );
-                                })
-                            }
-                            {emptyRows > 0 && (
-                                <TableRow style={{ height: (dense ? 33 : 53) * emptyRows }}>
-                                    <TableCell colSpan={6} />
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-                <TablePagination
-                    rowsPerPageOptions={[5, 10, 25]}
-                    component="div"
-                    count={rows.length}
-                    rowsPerPage={rowsPerPage}
-                    page={page}
-                    onPageChange={handleChangePage}
-                    onRowsPerPageChange={handleChangeRowsPerPage}
-                />
-            </Paper>
+        <div>
+            <TableContainer>
+                <Table
+                    className={classes.table}
+                    aria-labelledby="tableTitle"
+                    size={dense ? 'small' : 'medium'}
+                    aria-label="enhanced table"
+                >
+                    <EnhancedTableHead
+                        classes={classes}
+                        order={order}
+                        orderBy={orderBy}
+                        onFilterChange={handleFilterChange}
+                        onRequestSort={handleRequestSort}
+                        rowCount={rows.length}
+                    />
+                    <TableBody>
+                        {stableSort(rows, getComparator(order, orderBy))
+                            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                            .map((row, key) => {
+                                const labelId = `enhanced-table-checkbox-${key}`;
+                                return (
+                                    <ToDoListItem key={key} labelId={labelId} row={row} />
+                                );
+                            })
+                        }
+                        {emptyRows > 0 && (
+                            <TableRow style={{ height: (dense ? 33 : 53) * emptyRows }}>
+                                <TableCell colSpan={6} />
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+            <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={rows.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+            />
             <FormControlLabel
                 control={<Switch checked={dense} onChange={handleChangeDense} />}
                 label="Dense padding"

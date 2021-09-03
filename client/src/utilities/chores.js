@@ -70,7 +70,6 @@ export function calculateDueDate(frequency, lastCompletedDate, chore) {
     }
     if (frequency.repeatType === 'week') {
         const scheduledDaysOfWeek = frequency.repeatSubtype.map(d => parseInt(d)).sort();
-        let dayOfWeek = getDay(today);
         if (isToday(scheduledDateTime) || isAfter(scheduledDateTime, endOfDay(today))) {
             if (!scheduledDaysOfWeek.length) {
                 return scheduledDateTime;
@@ -94,7 +93,7 @@ export function calculateDueDate(frequency, lastCompletedDate, chore) {
             let dateCounter = scheduledToday;
             let dayFound = false;
             while (!dayFound) {
-                if(scheduledDaysOfWeek.includes(dayOfWeek(dateCounter))){
+                if(scheduledDaysOfWeek.includes(getDay(dateCounter))){
                     dayFound = true;
                 } else {
                     dateCounter = addDays(dateCounter,1);

@@ -12,3 +12,8 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.journalContainer {
+  background-color: #f0efe5;
+  padding: 0.25rem 1rem;
+}
