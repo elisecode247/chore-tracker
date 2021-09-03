@@ -50,6 +50,61 @@ app.post('/api/v1/auth/local',
     }
 );
 
+app.get('/api/v1/journal/today', verifyToken, async (req, res) => {
+    try {
+        database.query(`
+            SELECT j.uuid, j.entry, j.entry_date
+            FROM journal as j
+            INNER JOIN "user" as u ON j.user_id = u.id
+            WHERE u.id = 1 AND DATE(j.entry_date) = CURRENT_DATE
+            `, (err, results) => {
+            if (err) throw err;
+            res.send({ success: true, data: results.rows });
+        });
+    } catch (err) {
+        res.send({ success: false, errorMessage: 'A server error occurred.' });
+    }
+});
+
+app.post('/api/v1/journal', verifyToken, async (req, res) => {
+    try {
+        const queryString = `INSERT INTO journal (
+            user_id,
+            entry,
+            entry_date
+        )
+        VALUES (
+            1,
+            '${req.body.entry}',
+            '${req.body.entryDate}'
+        )
+        RETURNING id
+        `;
+        database.query(queryString, (err) => {
+            if (err) throw err;
+            res.send({ success: true });
+        });
+    } catch (err) {
+        res.send({ success: false, error: err });
+    }
+});
+
+app.put('/api/v1/journal', verifyToken, async (req, res) => {
+    try {
+        const queryString = `
+            UPDATE journal
+            SET entry = '${req.body.entry}'
+            WHERE uuid = '${req.body.uuid}'
+            RETURNING id
+        `;
+        database.query(queryString, (err) => {
+            if (err) throw err;
+            res.send({ success: true });
+        });
+    } catch (err) {
+        res.send({ success: false, error: err });
+    }
+});
 
 app.get('/api/v1/chores', verifyToken, async (req, res) => {
     try {

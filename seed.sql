@@ -10,6 +10,16 @@ CREATE TABLE "user" (
   "updated_at" timestamptz DEFAULT (now())
 );
 
+CREATE TABLE "journal" (
+  "id" SERIAL PRIMARY KEY,
+  "uuid" uuid DEFAULT uuid_generate_v4 (),
+  "user_id" int NOT NULL,
+  "entry_date" timestamptz,
+  "entry" text,
+  "created_at" timestamptz DEFAULT (now()),
+  "updated_at" timestamptz DEFAULT (now())
+);
+
 CREATE TABLE "chore" (
   "id" SERIAL PRIMARY KEY,
   "uuid" uuid DEFAULT uuid_generate_v4 (),
