@@ -15,6 +15,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useSelector } from 'react-redux';
 import { userSelector } from '../../slices/userApiSlice';
+import { defaultJournalSettings } from '../../constants/defaultValues';
 
 const useStyles = makeStyles({
     root: {
@@ -31,6 +32,7 @@ export default function Journal() {
     const [addJournalEntry, { isLoading: isJournalEntrySubmitLoading }] = useAddJournalEntryMutation();
     const [updateJournalEntry, { isLoading: isJournalEntryUpdateLoading }] = useUpdateJournalEntryMutation();
     const { settings } = useSelector(userSelector);
+    const journalSettings = (Object.values(settings).length && settings) || defaultJournalSettings;
 
     const editor = useEditor({
         extensions: [
@@ -44,11 +46,11 @@ export default function Journal() {
     });
 
     useEffect(()=> {
-        const text = (journalEntry && journalEntry[0] && journalEntry[0].entry) || settings.journalTemplate;
+        const text = (journalEntry && journalEntry[0] && journalEntry[0].entry) || journalSettings.journalTemplate;
         if(text && editor && !editor.isDestroyed){
             editor.commands.setContent(text);
         }
-    }, [journalEntry, editor, settings]);
+    }, [journalEntry, editor, journalSettings]);
 
     const handleSave = function() {
         if (journalEntry.length) {
@@ -72,7 +74,7 @@ export default function Journal() {
                 Journal
                 </Typography>
                 <Typography className={classes.title} color="textSecondary" gutterBottom>
-                    {settings.journalInstructions}
+                    {journalSettings.journalInstructions}
                 </Typography>
                 <EditorContent className={classes.entryContainer} editor={editor} />
             </CardContent>

@@ -15,15 +15,7 @@ import StarterKit from '@tiptap/starter-kit';
 import InputLabel from '@material-ui/core/InputLabel';
 import Typography from '@material-ui/core/Typography';
 import { updateUserSettings } from '../../slices/userApiSlice';
-
-const defaultSettings = {
-    journalInstructions: 'Reminders about your values, priorities, or goals. ' +
-        'Problems you have and how you solved them. Emotions you had and how you processed them. ' +
-        'Things that make you grateful. ' +
-        'Make sure to avoid ruminations and think of solutions.',
-    journalTemplate: ''
-};
-
+import { defaultJournalSettings } from '../../constants/defaultValues';
 const useStyles = makeStyles((theme) => ({
     card: {
         margin: '1rem',
@@ -38,8 +30,8 @@ export default function UserSettings() {
     const classes = useStyles();
     const dispatch = useDispatch();
     const { settings, isFetching: isUserLoading, isError: isUserError } = useSelector(userSelector);
-    const formattedSettings = (settings && Object.values(settings).length && settings) || defaultSettings;
-    const [journalInstructions, setJournalInstructions] = useState(formattedSettings.journalInstructions);
+    const journalSettings = (Object.values(settings).length && settings) || defaultJournalSettings;
+    const [journalInstructions, setJournalInstructions] = useState(journalSettings.journalInstructions);
     const editor = useEditor({
         extensions: [
             StarterKit,
@@ -53,9 +45,9 @@ export default function UserSettings() {
 
     useEffect(() => {
         if(editor && !editor.isDestroyed){
-            editor.commands.setContent(formattedSettings.journalTemplate);
+            editor.commands.setContent(journalSettings.journalTemplate);
         }
-    }, [formattedSettings, editor]);
+    }, [journalSettings, editor]);
 
     const handleSave = function() {
         dispatch(updateUserSettings({
