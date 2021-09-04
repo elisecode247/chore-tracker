@@ -182,7 +182,7 @@ app.post('/api/v1/chores', verifyToken, async (req, res) => {
 app.put('/api/v1/chores/:chore_uuid', verifyToken, async (req, res) => {
     try {
         const queryString = 'UPDATE "chore" SET scheduled_at = $1 WHERE uuid = $2';
-        await database.query(queryString, [req.body.scheduledAt, req.params.chore_uuid]);
+        await database.query(queryString, [req.body.scheduledAt, req.columns.chore_uuid]);
         res.send({ success: true });
     } catch (err) {
         res.send({ success: false, error: err });
@@ -331,31 +331,30 @@ app.put('/api/v1/events', verifyToken, async (req, res) => {
 app.post('/api/v1/events', verifyToken, async (req, res) => {
     try {
         const queryString = `
-            INSERT INTO event (
+        
+            INSERT INTO "event" (
                 chore_id,
-                ${!req.body.location ? '' : 'location,'}
-                ${!req.body.notes ? '' : 'notes,'}
-                ${!req.body.startedAt ? '' : 'started_at,'}
-                ${!req.body.completedAt ? '' : 'completed_at,'}
                 status,
+                completed_at,
                 completed_by
             )
             SELECT
                 c.id as chore_id,
-                ${!req.body.location ? '' : ' $1 as location, '}
-                ${!req.body.notes ? '' : ' $2 as notes, '}
-                ${!req.body.startedAt ? '' : ' $3 as started_at, '}
-                ${!req.body.completedAt ? '' : ' $4 as completed_at, '}
-                $5 as status,
-                $6 as completed_by
-            FROM (SELECT id FROM chore WHERE uuid = $7) c
+                $1 as status,
+                $2 as completed_at,
+                $3 as completed_by
+            FROM (SELECT id FROM chore WHERE uuid = $4) c
         `;
+        console.log('%c 🍲 queryString: ', 'font-size:20px;background-color: #B03734;color:#fff;', queryString);
         await database.query(queryString, [
-            req.body.location,
-            req.body.notes,
-            req.body.startedAt,
-            req.body.completedAt,
             req.body.status,
+            req.body.completedAt,
+            req.user.id,
+            req.body.choreUuid
+        ]);
+        console.log('%c 🥤: ', 'font-size:20px;background-color: #4b4b4b;color:#fff;', [
+            req.body.status,
+            req.body.completedAt,
             req.user.id,
             req.body.choreUuid
         ]);

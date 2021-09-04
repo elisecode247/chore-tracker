@@ -1,35 +1,35 @@
 import React, { useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { loginUser, userSelector, clearState } from '../../slices/userApiSlice';
+import { signUpUser, userSelector, clearState } from '../../../slices/userApiSlice';
 
-const Login = () => {
+const SignUp = () => {
     const dispatch = useDispatch();
     const history = useHistory();
     const { isFetching, isSuccess, isError, errorMessage } = useSelector(userSelector);
-    const onSubmit = (syntheticBaseEvent) => {
-        dispatch(loginUser({ email: syntheticBaseEvent.target[0].value, password: syntheticBaseEvent.target[1].value }));
-    };
-    useEffect(() => () => dispatch(clearState()), [dispatch]);
+    const onSubmit = (data) => dispatch(signUpUser(data));
+
+    useEffect(() => (() => dispatch(clearState())), [dispatch]);
 
     useEffect(() => {
-        if (isError) {
-            dispatch(clearState());
-        } else if (isSuccess) {
+        if (isSuccess) {
             dispatch(clearState());
             history.push('/');
+        } else if (isError) {
+            dispatch(clearState());
         }
-    }, [dispatch, errorMessage, history, isError, isSuccess]);
-
-    if (isFetching) {
-        return <div>Fetching...</div>;
-    }
+    }, [dispatch, errorMessage, history, isSuccess, isError]);
 
     return (
         <>
-            <h1>Login</h1>
-            <form method="POST" onSubmit={onSubmit}>
-                <label htmlFor="email"> Email address </label>
+            <h1>
+                Sign Up
+            </h1>
+            <form
+                onSubmit={onSubmit}
+                method="POST"
+            >
+                <label htmlFor="email" >Email address</label>
                 <input
                     id="email"
                     name="email"
@@ -45,13 +45,13 @@ const Login = () => {
                     autoComplete="current-password"
                     required
                 />
-                <button type="submit">{isFetching ? 'Fetching...' : 'Login'}</button>
+                <button type="submit" >
+                    {isFetching ? 'Fetching...' : 'Sign up'}
+                </button>
             </form>
-            {errorMessage ? (<div style={{ color: 'red' }}>{errorMessage}</div>) : null }
-            <p>Or <Link to="signUp"> Sign up</Link></p>
-
+            <p>Or <Link to="login"> Login</Link></p>
         </>
     );
 };
 
-export default Login;
+export default SignUp;

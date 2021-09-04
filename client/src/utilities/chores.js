@@ -258,7 +258,7 @@ export function formatChores(chores) {
                     formattedFrequency: formatFrequency(chore),
                     reason: chore.reason || '',
                     description: chore.description || '',
-                    status: chore.status || 'Not yet',
+                    status: isToday(dueDate) ? 'needs attention' : 'not needed yet',
                     tags: chore.tags || []
                 }
             };

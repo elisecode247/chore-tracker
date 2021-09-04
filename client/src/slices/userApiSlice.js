@@ -110,7 +110,6 @@ export const updateUserSettings = createAsyncThunk(
                 }
             );
             let jsonResponse = await response.json();
-            console.log('%c 🥖 jsonResponse: ', 'font-size:20px;background-color: #7F2B82;color:#fff;', jsonResponse);
 
             if (response.status === 200 && jsonResponse.success === true) {
                 return jsonResponse.data;

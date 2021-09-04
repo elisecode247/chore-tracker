@@ -20,9 +20,6 @@ export const eventsApi = createApi({
             query: ({
                 choreUuid,
                 status = '',
-                location = '',
-                notes= '',
-                startedAt = null,
                 completedAt = null
             }) => ({
                 url: 'events',
@@ -30,10 +27,7 @@ export const eventsApi = createApi({
                 body: {
                     choreUuid,
                     status,
-                    location,
-                    notes,
-                    startedAt,
-                    completedAt,
+                    completedAt
                 },
             }),
             invalidatesTags: ['events']

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
 import { useDispatch, useSelector } from 'react-redux';
-import { userSelector } from '../../slices/userApiSlice';
+import { userSelector } from '../../../slices/userApiSlice';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
@@ -14,8 +14,8 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import InputLabel from '@material-ui/core/InputLabel';
 import Typography from '@material-ui/core/Typography';
-import { updateUserSettings } from '../../slices/userApiSlice';
-import { defaultJournalSettings } from '../../constants/defaultValues';
+import { updateUserSettings } from '../../../slices/userApiSlice';
+import { defaultJournalSettings } from '../../../constants/defaultValues';
 const useStyles = makeStyles((theme) => ({
     card: {
         margin: '1rem',

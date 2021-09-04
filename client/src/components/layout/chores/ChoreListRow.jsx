@@ -16,7 +16,7 @@ import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import EditIcon from '@material-ui/icons/Edit';
 import Chip from '@material-ui/core/Chip';
 import useStyles from './ChoresListRowStyles';
-import { DATE_FORMAT } from '../../constants/dateTimeFormats';
+import { DATE_FORMAT } from '../../../constants/dateTimeFormats';
 
 export default function Row({ chore }) {
     const [open, setOpen] = useState(false);

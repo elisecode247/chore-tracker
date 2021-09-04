@@ -10,15 +10,17 @@ import {
     useGetTodayJournalEntryQuery,
     useAddJournalEntryMutation,
     useUpdateJournalEntryMutation
-} from '../../slices/journalApiSlice';
+} from '../../../slices/journalApiSlice';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useSelector } from 'react-redux';
-import { userSelector } from '../../slices/userApiSlice';
-import { defaultJournalSettings } from '../../constants/defaultValues';
+import { userSelector } from '../../../slices/userApiSlice';
+import { defaultJournalSettings } from '../../../constants/defaultValues';
+import TipTapMenu from '../../TipTapMenu';
 
 const useStyles = makeStyles({
     root: {
+        margin: '1rem',
         minWidth: 275,
     },
     title: {
@@ -77,6 +79,7 @@ export default function Journal() {
                     {journalSettings.journalInstructions}
                 </Typography>
                 <EditorContent className={classes.entryContainer} editor={editor} />
+                <TipTapMenu editor={editor} />
             </CardContent>
             <CardActions className={classes.root}>
                 <Button size="small" onClick={handleSave}>

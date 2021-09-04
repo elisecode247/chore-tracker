@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useAddChoreMutation } from '../../slices/choresApiSlice';
-import { useGetTagsQuery } from '../../slices/tagsApiSlice';
+import React, { useEffect, useState } from 'react';
+import { useAddChoreMutation } from '../../../slices/choresApiSlice';
+import { useGetTagsQuery } from '../../../slices/tagsApiSlice';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import AddIcon from '@material-ui/icons/Add';
 import Button from '@material-ui/core/Button';
@@ -16,13 +16,16 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Modal from '@material-ui/core/Modal';
 import Select from '@material-ui/core/Select';
 import TextField from '@material-ui/core/TextField';
-import { defaultDescription } from '../../constants/defaultValues';
-import styles from '../../styles';
+import { defaultDescription } from '../../../constants/defaultValues';
+import styles from '../../../styles';
 import {
     KeyboardTimePicker,
     KeyboardDatePicker
 } from '@material-ui/pickers';
-import formatScheduledAt from '../../utilities/formatScheduledAt';
+import formatScheduledAt from '../../../utilities/formatScheduledAt';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import TipTapMenu from '../../TipTapMenu';
 
 const useStyles = makeStyles((theme) => ({
     base: {
@@ -34,7 +37,9 @@ const useStyles = makeStyles((theme) => ({
         border: '2px solid #000',
         boxShadow: theme.shadows[5],
         padding: theme.spacing(2, 4, 3),
-        width: '66%'
+        width: '66%',
+        maxHeight: '99vh',
+        overflowY: 'auto'
     },
     buttonContainer: {
         padding: '1rem 0 1rem 0'
@@ -91,6 +96,27 @@ export default function AddChoreModal() {
     const [selectedTags, setSelectedTags] = useState([]);
     const [scheduledDate, setScheduledDate] = useState(new Date());
     const [scheduledTime, setScheduledTime] = useState(null);
+
+    const editor = useEditor({
+        extensions: [
+            StarterKit,
+        ],
+        editorProps: {
+            attributes: {
+                class: 'journalContainer'
+            }
+        },
+        content: `
+            <h1>Test</h1>
+            <h2>Tst2>/h2>
+        `
+    });
+
+    useEffect(()=> {
+        if (editor && !editor.isDestroyed) {
+            editor.commands.setContent(defaultDescription);
+        }
+    }, [editor]);
 
     const handleOpen = () => {
         setOpen(true);
@@ -172,7 +198,7 @@ export default function AddChoreModal() {
             <h2 id="add-chore-modal-title">Add Chore</h2>
             <form id="add-chore-modal-form">
                 <TextField id="add-chore-name-input" fullWidth label="What" onChange={(evt)=>setName(evt.target.value)} required type="text" />
-                <TextField
+                {/* <TextField
                     className={classes.descriptionInput}
                     defaultValue={defaultDescription}
                     id="add-chore-description-input"
@@ -184,7 +210,10 @@ export default function AddChoreModal() {
                     multiline
                     onChange={(evt)=>setDescription(evt.target.value)}
                     variant="filled"
-                />
+                /> */}
+                <EditorContent className={classes.entryContainer} editor={editor} id="add-chore-description-input" />
+                <TipTapMenu editor={editor} />
+
                 <TextField id="add-chore-location-input" fullWidth label="Location" onChange={(evt)=>setLocation(evt.target.value)}/>
                 <TextField id="add-chore-reason-input" fullWidth label="Why it's important" onChange={(evt)=>setReason(evt.target.value)}/>
                 <FormControl className={`${classes.formControl} ${classes.inlineBlock}`} >
