@@ -17,7 +17,7 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 
 passport.use(new LocalStrategy(async function (username, password, done) {
     try {
-        const queryString = 'SELECT id, uuid, email FROM "user" WHERE email = $1 AND password = $2';
+        const queryString = 'SELECT id, uuid, email, settings FROM "user" WHERE email = $1 AND password = $2';
         const result = await database.query(queryString, [username, password]);
         if (!result.rows.length) return done(null, false);
         return done(null, result.rows[0]);
@@ -50,12 +50,12 @@ app.post('/api/v1/auth/local', function (req, res, next) {
 
 app.get('/api/v1/journal/today', verifyToken, async (req, res) => {
     try {
-        const result = await database.query(`
+        const queryString = `
             SELECT j.uuid, j.entry, j.entry_date
             FROM journal as j
-            INNER JOIN "user" as u ON j.user_id = u.id
-            WHERE u.id = $1 AND DATE(j.entry_date) = CURRENT_DATE
-        `, [req.user.id]);
+            WHERE j.user_id = $1 AND DATE(j.entry_date) = CURRENT_DATE
+        `;
+        const result = await database.query(queryString, [req.user.id]);
         res.send({ success: true, data: result.rows });
     } catch (err) {
         res.send({ success: false, errorMessage: 'A server error occurred.' });
@@ -367,6 +367,21 @@ app.get('/api/v1/tags', verifyToken, async (req, res) => {
         res.send({ success: true, data: result.rows });
     } catch (err) {
         res.send({success: false, error: err});
+    }
+});
+
+app.put('/api/v1/user/settings', verifyToken, async (req, res) => {
+    try {
+        const queryString = 'UPDATE "user" SET settings = $1 WHERE id = $2 RETURNING settings';
+        const result = await database.query(queryString, [req.body, req.user.id]);
+        console.log('%c 🥔 result: ', 'font-size:20px;background-color: #B03734;color:#fff;', result);
+        if (!result.rows.length) {
+            res.send({ success: false, errorMessage: 'An unknown error occurred.' });
+        } else {
+            res.send({ success: true, data: result.rows[0].settings });
+        }
+    } catch (err) {
+        res.send({ success: false, error: err });
     }
 });
 

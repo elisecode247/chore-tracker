@@ -13,6 +13,8 @@ import {
 } from '../../slices/journalApiSlice';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { useSelector } from 'react-redux';
+import { userSelector } from '../../slices/userApiSlice';
 
 const useStyles = makeStyles({
     root: {
@@ -28,6 +30,7 @@ export default function Journal() {
     const { data: journalEntry, error: journalEntryError, isLoading: isJournalLoading } = useGetTodayJournalEntryQuery();
     const [addJournalEntry, { isLoading: isJournalEntrySubmitLoading }] = useAddJournalEntryMutation();
     const [updateJournalEntry, { isLoading: isJournalEntryUpdateLoading }] = useUpdateJournalEntryMutation();
+    const { settings } = useSelector(userSelector);
 
     const editor = useEditor({
         extensions: [
@@ -41,11 +44,11 @@ export default function Journal() {
     });
 
     useEffect(()=> {
-        const text = (journalEntry && journalEntry[0] && journalEntry[0].entry) || false;
+        const text = (journalEntry && journalEntry[0] && journalEntry[0].entry) || settings.journalTemplate;
         if(text && editor && !editor.isDestroyed){
             editor.commands.setContent(text);
         }
-    }, [journalEntry, editor]);
+    }, [journalEntry, editor, settings]);
 
     const handleSave = function() {
         if (journalEntry.length) {
@@ -69,7 +72,7 @@ export default function Journal() {
                 Journal
                 </Typography>
                 <Typography className={classes.title} color="textSecondary" gutterBottom>
-                    Reminders about your values, priorities, and anything you're trying to solve
+                    {settings.journalInstructions}
                 </Typography>
                 <EditorContent className={classes.entryContainer} editor={editor} />
             </CardContent>

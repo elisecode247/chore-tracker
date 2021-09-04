@@ -7,7 +7,8 @@ CREATE TABLE "user" (
   "email" varchar,
   "password" varchar,
   "created_at" timestamptz DEFAULT (now()),
-  "updated_at" timestamptz DEFAULT (now())
+  "updated_at" timestamptz DEFAULT (now()),
+  "settings" jsonb NOT NULL DEFAULT '{}'::jsonb
 );
 
 CREATE TABLE "journal" (

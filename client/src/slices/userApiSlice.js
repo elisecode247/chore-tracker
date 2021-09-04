@@ -82,7 +82,38 @@ export const fetchUserByToken = createAsyncThunk(
             let jsonResponse = await response.json();
 
             if (response.status === 200 && jsonResponse.success) {
-                return { ...jsonResponse.data.user };
+                return jsonResponse.data;
+            } else {
+                return thunkAPI.rejectWithValue(jsonResponse.errorMessage);
+            }
+        } catch (e) {
+            return thunkAPI.rejectWithValue(e.response.data);
+        }
+    }
+);
+
+export const updateUserSettings = createAsyncThunk(
+    'user/settings',
+    async (settings, thunkAPI) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(
+                `${window.location.origin}/api/v1/user/settings`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(settings)
+                }
+            );
+            let jsonResponse = await response.json();
+            console.log('%c 🥖 jsonResponse: ', 'font-size:20px;background-color: #7F2B82;color:#fff;', jsonResponse);
+
+            if (response.status === 200 && jsonResponse.success === true) {
+                return jsonResponse.data;
             } else {
                 return thunkAPI.rejectWithValue(jsonResponse.errorMessage);
             }
@@ -95,8 +126,10 @@ export const fetchUserByToken = createAsyncThunk(
 export const userApi = createSlice({
     name: 'user',
     initialState: {
-        username: '',
+        uuid: '',
         email: '',
+        username: '',
+        settings: {},
         isFetching: false,
         isSuccess: false,
         isError: false,
@@ -144,15 +177,34 @@ export const userApi = createSlice({
             state.isFetching = true;
         },
         [fetchUserByToken.fulfilled]: (state, { payload }) => {
-            state.isFetching = false;
+            state.isError = false;
             state.isSuccess = true;
+            state.isFetching = false;
             state.uuid = payload.uuid;
             state.email = payload.email;
             state.username = payload.email;
+            state.settings = payload.settings;
         },
         [fetchUserByToken.rejected]: (state) => {
-            state.isFetching = false;
             state.isError = true;
+            state.isSuccess = false;
+            state.isFetching = false;
+        },
+        [updateUserSettings.pending]: (state) => {
+            state.isError = false;
+            state.isSuccess = false;
+            state.isFetching = true;
+        },
+        [updateUserSettings.fulfilled]: (state, { payload }) => {
+            state.settings = payload;
+            state.isError = false;
+            state.isSuccess = true;
+            state.isFetching = false;
+        },
+        [updateUserSettings.rejected]: (state) => {
+            state.isError = true;
+            state.isSuccess = false;
+            state.isFetching = false;
         },
     },
 });

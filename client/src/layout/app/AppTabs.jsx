@@ -25,6 +25,7 @@ export default function AppTabs({ selectedTab, setTab }) {
                     <Tab label="Agenda" {...a11yProps(0)} />
                     <Tab label="Calendar" {...a11yProps(1)} />
                     <Tab label="Chores" {...a11yProps(2)} />
+                    <Tab label="Customization" {...a11yProps(3)} />
                 </Tabs>
             </AppBar>
         </div>

@@ -18,6 +18,7 @@ import { userSelector, fetchUserByToken, clearState } from '../../slices/userApi
 import clsx from 'clsx';
 import { DAY_OF_WEEK_AND_DATE } from '../../constants/dateTimeFormats';
 import format from 'date-fns/format';
+import UserSettings from '../user/UserSettings';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -112,10 +113,7 @@ function Dashboard() {
                         </Paper>
                     </TabPanel>
                     <TabPanel value={selectedTab} index={3}>
-                        <Paper elevation={3} >
-                            <h1>Account Settings</h1>
-                            <p>Under Construction</p>
-                        </Paper>
+                        <UserSettings />
                     </TabPanel>
                 </MuiPickersUtilsProvider>
             )}

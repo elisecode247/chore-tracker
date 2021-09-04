@@ -90,7 +90,6 @@ export default function DashboardBar({ isFetching, onLogin, onLogOut, selectedTa
                                 open={open}
                                 onClose={handleClose}
                             >
-                                <MenuItem onClick={handleClose}>Profile</MenuItem>
                                 <MenuItem onClick={handleClose}>My account</MenuItem>
                             </Menu>
                         </div>
