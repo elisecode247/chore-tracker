@@ -8,6 +8,7 @@ const path = require('path');
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 database.connect();
 
@@ -17,10 +18,14 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 
 passport.use(new LocalStrategy(async function (username, password, done) {
     try {
-        const queryString = 'SELECT id, uuid, email, settings FROM "user" WHERE email = $1 AND password = $2';
-        const result = await database.query(queryString, [username, password]);
+        const queryString = 'SELECT id, uuid, email, password, settings FROM "user" WHERE email = $1';
+        const result = await database.query(queryString, [username]);
         if (!result.rows.length) return done(null, false);
-        return done(null, result.rows[0]);
+
+        const match = await bcrypt.compare(password, result.rows[0].password);
+        if (!match) return done(null, false);
+        if (match) return done(null, result.rows[0]);
+
     } catch (err) {
         return done(err, null);
     }
@@ -374,7 +379,6 @@ app.put('/api/v1/user/settings', verifyToken, async (req, res) => {
     try {
         const queryString = 'UPDATE "user" SET settings = $1 WHERE id = $2 RETURNING settings';
         const result = await database.query(queryString, [req.body, req.user.id]);
-        console.log('%c 🥔 result: ', 'font-size:20px;background-color: #B03734;color:#fff;', result);
         if (!result.rows.length) {
             res.send({ success: false, errorMessage: 'An unknown error occurred.' });
         } else {
