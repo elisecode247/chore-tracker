@@ -10,19 +10,53 @@ import { getComparator, stableSort } from './utilities';
 import ToDoListHead from './ToDoListHead';
 import ToDoListItem from './ToDoListItem';
 import { toDoListStyles as useStyles } from './styles';
+import { columns } from './utilities';
+import useMediaQuery from '@material-ui/core/useMediaQuery';
+import ToDoListFilterHead from './ToDoListFilterHead';
+import { useSelector } from 'react-redux';
 
 export default function ToDoList() {
+    const desktop = useMediaQuery('(min-width:650px)');
+    const headCells = columns.filter(column => {
+        if (!desktop) return column.forMobile;
+        return true;
+    });
     const classes = useStyles();
     const [order, setOrder] = React.useState('asc');
     const [orderBy, setOrderBy] = React.useState('name');
     const { data: chores, error: choresError, isLoading: isChoresLoading } = useGetChoresQuery();
     const { data: events, error: eventsError, isLoading: isEventsLoading } = useGetTodayEventsQuery();
     const items = Object.values({ ...formatChores(chores), ...formatEvents(events) });
-    const rows = items.filter(item => {
+    const filters = useSelector((state) => state.agenda.filters);
+    const rows = stableSort(items.filter(item => {
         if (item.type === 'event') return true;
         const foundEvent = items.find(duplicateItem => duplicateItem.type === 'event' && duplicateItem.choreUuid === item.uuid);
         return !foundEvent;
-    });
+    }).filter(item => {
+        if (!filters.length) return true;
+        let keep = false;
+        filters.forEach(filter => {
+            if (keep === true) return;
+            const { name, operator, value } = filter;
+            if (!name || !operator || (Array.isArray(value) ? !value.length : !value) ) {
+                keep = true;
+                return;
+            }
+
+            if (operator === 'includes') {
+                if (value.includes(item[name])) {
+                    keep = true;
+                    return;
+                }
+            } else if (operator === '!includes') {
+                if (!value.includes(item[name])) {
+                    keep = true;
+                    return;
+                }
+            }
+        });
+        return keep;
+    }), getComparator(order, orderBy));
 
     const handleRequestSort = (event, property) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -44,6 +78,7 @@ export default function ToDoList() {
 
     return (
         <Card className={classes.root} elevation={3}>
+            <ToDoListFilterHead headCells={headCells} />
             <TableContainer>
                 <Table
                     className={classes.table}
@@ -52,7 +87,7 @@ export default function ToDoList() {
                     aria-label="enhanced table"
                 >
                     <ToDoListHead
-                        classes={classes}
+                        headCells={headCells}
                         order={order}
                         orderBy={orderBy}
                         onFilterChange={handleFilterChange}
@@ -60,14 +95,12 @@ export default function ToDoList() {
                         rowCount={rows.length}
                     />
                     <TableBody>
-                        {stableSort(rows, getComparator(order, orderBy))
-                            .map((row, key) => {
-                                const labelId = `enhanced-table-checkbox-${key}`;
-                                return (
-                                    <ToDoListItem key={key} labelId={labelId} row={row} />
-                                );
-                            })
-                        }
+                        {rows.map((row, key) => {
+                            const labelId = `enhanced-table-checkbox-${key}`;
+                            return (
+                                <ToDoListItem headCells={headCells} key={key} labelId={labelId} row={row} />
+                            );
+                        })}
                     </TableBody>
                 </Table>
             </TableContainer>

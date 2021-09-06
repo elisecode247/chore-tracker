@@ -1,13 +1,18 @@
-import { headCells } from './utilities';
 import FilterMenu from './FilterMenu';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import TableHead from '@material-ui/core/TableHead';
 import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
 import PropTypes from 'prop-types';
-
-export default function ToDoListHead(props) {
-    const { classes, order, orderBy, onRequestSort, onFilterChange } = props;
+import { toDoListStyles as useStyles } from './styles';
+export default function ToDoListHead({
+    headCells,
+    order,
+    orderBy,
+    onRequestSort,
+    onFilterChange
+}) {
+    const classes = useStyles();
     const createSortHandler = (property) => (event) => {
         onRequestSort(event, property);
     };
@@ -22,7 +27,7 @@ export default function ToDoListHead(props) {
                 {headCells.map((headCell) => (
                     <TableCell
                         key={headCell.id}
-                        align={headCell.numeric ? 'right' : 'left'}
+                        align={headCell.dataType === 'number' ? 'right' : 'left'}
                         padding={headCell.disablePadding ? 'none' : 'normal'}
                         sortDirection={orderBy === headCell.id ? order : false}
                     >
@@ -50,7 +55,6 @@ export default function ToDoListHead(props) {
 }
 
 ToDoListHead.propTypes = {
-    classes: PropTypes.object.isRequired,
     onFilterChange: PropTypes.func.isRequired,
     onRequestSort: PropTypes.func.isRequired,
     order: PropTypes.oneOf(['asc', 'desc']).isRequired,

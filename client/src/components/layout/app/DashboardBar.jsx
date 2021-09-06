@@ -1,14 +1,14 @@
 import React from 'react';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import AppBar from '@material-ui/core/AppBar';
-import AppTabs from './AppTabs';
 import Toolbar from '@material-ui/core/Toolbar';
 import Switch from '@material-ui/core/Switch';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormGroup from '@material-ui/core/FormGroup';
 import { useSelector } from 'react-redux';
 import { userSelector } from '../../../slices/userApiSlice';
-
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
 const useStyles = makeStyles((theme) => ({
     root: {
         flexGrow: 1,
@@ -19,7 +19,20 @@ const useStyles = makeStyles((theme) => ({
     title: {
         flexGrow: 1,
     },
+    login: {
+        // TODO fix later for mobile
+        position: 'absolute',
+        right: '0',
+        bottom: '0px'
+    }
 }));
+
+const a11yProps = function(index) {
+    return {
+        id: `simple-tab-${index}`,
+        'aria-controls': `simple-tabpanel-${index}`,
+    };
+};
 
 export default function DashboardBar({ isFetching, onLogin, onLogOut, selectedTab, setTab }) {
     const classes = useStyles();
@@ -36,13 +49,27 @@ export default function DashboardBar({ isFetching, onLogin, onLogOut, selectedTa
     if (isFetching) {
         return (<>Fetching...</>);
     }
+    const handleTabChange = (event, newValue) => {
+        setTab(newValue);
+    };
 
     return (
         <div className={classes.root}>
-            <AppBar position="static">
-                <Toolbar>
-                    <AppTabs selectedTab={selectedTab} setTab={setTab} />
-                    <FormGroup>
+            <AppBar>
+                <Toolbar className={classes.toolbar}>
+                    <Tabs
+                        className={classes.tabs} value={selectedTab} onChange={handleTabChange} aria-label="page tabs"
+                        variant="scrollable"
+                        scrollButtons="auto"
+                    >
+                        <Tab label="Agenda" {...a11yProps(0)} />
+                        <Tab label="Calendar" {...a11yProps(1)} />
+                        <Tab label="Chores" {...a11yProps(2)} />
+                        <Tab label="Add New Chore" {...a11yProps(3)} />
+                        <Tab label="Customizations" {...a11yProps(4)} />
+
+                    </Tabs>
+                    <FormGroup className={classes.login}>
                         <FormControlLabel
                             control={<Switch checked={auth} onChange={handleChange} aria-label="login switch" />}
                             label={auth ? email : 'Login'}

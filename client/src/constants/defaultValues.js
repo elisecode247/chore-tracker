@@ -1,13 +1,19 @@
 export const defaultDescription = `
+<article>
+    <p>
+        Steps:
+    </p>
+    <p>
+        Items needed and where they are:
+    </p>
 
-Steps:
-
-Items needed and where they are:
-
-Obstacles:
-
-Surrounding Emotions:
-
+    <p>
+        Obstacles:
+    </p>
+    <p>
+        Emotions you feel before, during, and after
+    </p>
+</article>
 `;
 
 export const defaultJournalSettings = {

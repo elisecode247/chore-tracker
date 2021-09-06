@@ -19,8 +19,9 @@ import SaveIcon from '@material-ui/icons/Save';
 import UndoIcon from '@material-ui/icons/Undo';
 import formatScheduledAt from '../../../utilities/formatScheduledAt';
 import { toDoItemStyles as useStyles } from './styles';
+import agendaStatuses from '../../../constants/agendaStatuses';
 
-export default function ToDoItem({ row, labelId }) {
+export default function ToDoItem({ headCells, row, labelId }) {
     const classes = useStyles();
     const [rescheduleChore, { isChoreRescheduleLoading }] = useRescheduleChoreMutation();
     const [addEvent, { isEventAddLoading }] = useAddEventMutation();
@@ -32,8 +33,6 @@ export default function ToDoItem({ row, labelId }) {
     const [startTime, setStartTime] = useState(new Date(row.scheduledAt));
 
     const handleCompletedEvent = function (uuid, type) {
-        console.log('%c 🍈 uuid: ', 'font-size:20px;background-color: #7F2B82;color:#fff;', uuid);
-        console.log('%c 🌰 type: ', 'font-size:20px;background-color: #4b4b4b;color:#fff;', type);
         if (type === 'chore') {
             addEvent({
                 choreUuid: uuid,
@@ -155,36 +154,39 @@ export default function ToDoItem({ row, labelId }) {
             <TableCell component="th" id={labelId} scope="row" padding="none">
                 {row.name}
             </TableCell>
-            <TableCell>{row.status}</TableCell>
+            <TableCell>{agendaStatuses[row.status]}</TableCell>
             <TableCell align="right">{row.formattedDueDate}</TableCell>
-            <TableCell>{row.formattedFrequency}</TableCell>
-            <TableCell align="right">
-                {row.type === 'chore' ? row.formattedLastCompletedDate : editEventDate ? (
-                    <span>
-                        <KeyboardDateTimePicker
-                            margin="normal"
-                            id="scheduled-chore-time-local"
-                            label="Completed Date and Time"
-                            value={completedDateTime}
-                            onChange={setCompletedDateTime}
-                            KeyboardButtonProps={{
-                                'aria-label': 'change date and time',
-                            }}
-                            variant="inline"
-                        />
-                        <IconButton onClick={()=> setEditEventDate(false)}>
-                            <UndoIcon />
-                        </IconButton>
-                        <IconButton onClick={handleEditCompletedDate}>
-                            <SaveIcon />
-                        </IconButton>
-                    </span>
-                ) : (
-                    <span className={classes.editableTableCell} onClick={() => setEditEventDate(true)}>
-                        {row.formattedLastCompletedDate}
-                    </span>
-                )}
-            </TableCell>
+            {headCells.findIndex(c => c.id === 'frequency') >=0 ? (
+                <TableCell>{row.formattedFrequency}</TableCell>) : null
+            }
+            {headCells.findIndex(c => c.id === 'lastCompletedDate') >=0 ? (
+                <TableCell align="right">
+                    {row.type === 'chore' ? row.formattedLastCompletedDate : editEventDate ? (
+                        <span>
+                            <KeyboardDateTimePicker
+                                margin="normal"
+                                id="scheduled-chore-time-local"
+                                label="Completed Date and Time"
+                                value={completedDateTime}
+                                onChange={setCompletedDateTime}
+                                KeyboardButtonProps={{
+                                    'aria-label': 'change date and time',
+                                }}
+                                variant="inline"
+                            />
+                            <IconButton onClick={()=> setEditEventDate(false)}>
+                                <UndoIcon />
+                            </IconButton>
+                            <IconButton onClick={handleEditCompletedDate}>
+                                <SaveIcon />
+                            </IconButton>
+                        </span>
+                    ) : (
+                        <span className={classes.editableTableCell} onClick={() => setEditEventDate(true)}>
+                            {row.formattedLastCompletedDate}
+                        </span>
+                    )}
+                </TableCell>) : null}
             <TableCell padding="checkbox">
                 <div className={classes.tableCell}>
                     {row.type === 'chore' ? (

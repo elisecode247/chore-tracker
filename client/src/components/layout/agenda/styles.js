@@ -40,6 +40,25 @@ export const agendaStyles = makeStyles((theme) => ({
     },
 }));
 
+export const filterHeadStyles = makeStyles((theme) => ({
+    root: {
+        margin: '1rem',
+        display: 'flex',
+        flexDirection: 'row'
+    },
+    filterContainer: {
+        margin: '0.5rem',
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-start'
+    },
+    formControl: {
+        margin: theme.spacing(1),
+        minWidth: 120,
+    }
+}));
+
 export const toDoListStyles = makeStyles((theme) => ({
     root: {
         margin: '1rem'

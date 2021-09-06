@@ -1,15 +1,15 @@
 import compareDesc from 'date-fns/compareDesc';
 
-export const headCells = [
-    { id: 'name', numeric: false, disablePadding: true, label: 'To Do', filter: false },
-    { id: 'status', numeric: false, disablePadding: false, label: 'Status', filter: true },
-    { id: 'dueDate', numeric: true, disablePadding: false, label: 'Due', filter: true },
-    { id: 'frequency', numeric: false, disablePadding: false, label: 'Frequency', filter: true },
-    { id: 'lastCompletedDate', numeric: true, disablePadding: false, label: 'Last Done', filter: false },
+export const columns = [
+    { id: 'name', dataType: 'string', disablePadding: true, label: 'To Do', forMobile: true, filter: false },
+    { id: 'status', dataType: 'string', disablePadding: false, label: 'Status', forMobile: true, filter: true },
+    { id: 'dueDate', dataType: 'date', disablePadding: false, label: 'Due', forMobile: true, filter: true },
+    { id: 'frequency', dataType: 'string', disablePadding: false, label: 'Frequency', forMobile: false, filter: true },
+    { id: 'lastCompletedDate', dataType: 'date', disablePadding: false, label: 'Last Done', forMobile: false, filter: false },
 ];
 
 const descendingComparator = function (a, b, orderBy) {
-    const dataType = headCells.find(cell => cell.id === orderBy);
+    const dataType = columns.find(cell => cell.id === orderBy);
 
     if (dataType.numeric) {
         if (!a[orderBy] && !b[orderBy]) {

@@ -345,14 +345,7 @@ app.post('/api/v1/events', verifyToken, async (req, res) => {
                 $3 as completed_by
             FROM (SELECT id FROM chore WHERE uuid = $4) c
         `;
-        console.log('%c 🍲 queryString: ', 'font-size:20px;background-color: #B03734;color:#fff;', queryString);
         await database.query(queryString, [
-            req.body.status,
-            req.body.completedAt,
-            req.user.id,
-            req.body.choreUuid
-        ]);
-        console.log('%c 🥤: ', 'font-size:20px;background-color: #4b4b4b;color:#fff;', [
             req.body.status,
             req.body.completedAt,
             req.user.id,
