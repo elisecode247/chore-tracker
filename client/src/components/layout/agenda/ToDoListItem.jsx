@@ -20,17 +20,18 @@ import UndoIcon from '@material-ui/icons/Undo';
 import formatScheduledAt from '../../../utilities/formatScheduledAt';
 import { toDoItemStyles as useStyles } from './styles';
 import agendaStatuses from '../../../constants/agendaStatuses';
+import EditIcon from '@material-ui/icons/Edit';
 
-export default function ToDoItem({ headCells, row, labelId }) {
+export default function ToDoListItem({ headCells, row, labelId }) {
     const classes = useStyles();
     const [rescheduleChore, { isChoreRescheduleLoading }] = useRescheduleChoreMutation();
     const [addEvent, { isEventAddLoading }] = useAddEventMutation();
     const [updateEvent, { isEventUpdateLoading }] = useUpdateEventMutation();
     const [editChoreDate, setEditChoreDate] = useState(false);
     const [editEventDate, setEditEventDate] = useState(false);
-    const [completedDateTime, setCompletedDateTime] = useState(new Date(row.scheduledAt));
-    const [startDate, setStartDate] = useState(new Date(row.scheduledAt));
-    const [startTime, setStartTime] = useState(new Date(row.scheduledAt));
+    const [completedDateTime, setCompletedDateTime] = useState(new Date());
+    const [startDate, setStartDate] = useState(new Date());
+    const [startTime, setStartTime] = useState(new Date());
 
     const handleCompletedEvent = function (uuid, type) {
         if (type === 'chore') {
@@ -55,11 +56,11 @@ export default function ToDoItem({ headCells, row, labelId }) {
         });
     };
 
-    const handleAddProgressEvent = function (choreUuid) {
+    const handleAddProgressEvent = function (uuid) {
         addEvent({
-            choreUuid,
+            choreUuid: uuid,
             status: 'progress',
-            completedAt: new Date()
+            startedAt: new Date()
         });
     };
 
@@ -161,7 +162,7 @@ export default function ToDoItem({ headCells, row, labelId }) {
             }
             {headCells.findIndex(c => c.id === 'lastCompletedDate') >=0 ? (
                 <TableCell align="right">
-                    {row.type === 'chore' ? row.formattedLastCompletedDate : editEventDate ? (
+                    {row.type === 'chore' ? row.formattedLastCompletedDate : (row.status === 'done' && editEventDate) ? (
                         <span>
                             <KeyboardDateTimePicker
                                 margin="normal"
@@ -181,8 +182,15 @@ export default function ToDoItem({ headCells, row, labelId }) {
                                 <SaveIcon />
                             </IconButton>
                         </span>
-                    ) : (
+                    ) : row.status === 'done' && !editEventDate ? (
                         <span className={classes.editableTableCell} onClick={() => setEditEventDate(true)}>
+                            <IconButton onClick={handleEditCompletedDate}>
+                                <EditIcon />
+                            </IconButton>
+                            {row.formattedLastCompletedDate}
+                        </span>
+                    ) : (
+                        <span className={classes.editableTableCell}>
                             {row.formattedLastCompletedDate}
                         </span>
                     )}
@@ -191,7 +199,7 @@ export default function ToDoItem({ headCells, row, labelId }) {
                 <div className={classes.tableCell}>
                     {row.type === 'chore' ? (
                         <Tooltip title="Set start time now">
-                            <IconButton aria-label="Set start time now" onClick={() => handleAddProgressEvent(row.choreUuid)}>
+                            <IconButton aria-label="Set start time now" onClick={() => handleAddProgressEvent(row.uuid)}>
                                 <TimerIcon />
                             </IconButton>
                         </Tooltip>

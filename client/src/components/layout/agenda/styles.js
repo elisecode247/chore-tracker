@@ -26,7 +26,7 @@ export const agendaStyles = makeStyles((theme) => ({
         width: '100%'
     },
     h1: {
-        margin: '1rem'
+        margin: '0 0 1rem 0'
     },
     h1Subtitle: {
         fontSize: '1rem',

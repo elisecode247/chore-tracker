@@ -10,7 +10,7 @@ export default function Agenda() {
 
     return (
         <div className={classes.root}>
-            <Typography className={classes.h1} variant="h3" id="tableTitle" component="h1">
+            <Typography className={classes.h1} variant="h4" id="tableTitle" component="h1">
                 Agenda
                 <span className={classes.h1Subtitle}>
                     {format(new Date(), DAY_OF_WEEK_AND_DATE)}

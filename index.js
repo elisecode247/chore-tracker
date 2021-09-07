@@ -302,25 +302,32 @@ app.get('/api/v1/events', verifyToken, async (req, res) => {
 
 app.put('/api/v1/events', verifyToken, async (req, res) => {
     try {
+        const params = Object.entries(req.body).reduce((acc, param)=> {
+            const [paramName, paramValue] = param;
+            if (paramName === 'uuid') return acc;
+            if (!paramValue) return acc;
+            const index = Object.keys(acc) && Object.keys(acc).length + 1 || 1;
+            return {
+                ...acc,
+                [`$${index}`]: {
+                    paramKey: `$${index}`,
+                    paramName,
+                    paramValue
+                }
+            };
+        }, {});
         const queryString = `
             UPDATE event
             SET
-                ${!req.body.location ? '' : ' location = $1, '}
-                ${!req.body.notes ? '' : ' notes = $2, '}
-                ${!req.body.startedAt ? '' : ' started_at = $3, '}
-                ${!req.body.completedAt ? '' : ' completed_at = $4, '}
-                ${!req.body.status ? '' : ' status = $5, '}
-                completed_by = $6)
-            WHERE uuid = '${req.body.uuid}'
+                ${Object.values(params).map(p => ` ${p.paramName} = ${p.paramKey}, `).join('')}
+                completed_by = $${Object.values(params).length + 1}
+            WHERE uuid = $${Object.values(params).length + 2}
         `;
 
         await database.query(queryString, [
-            req.body.location,
-            req.body.notes,
-            req.body.startedAt,
-            req.body.completedAt,
-            req.body.status,
-            req.user.uuid
+            ...Object.values(params).map(p => p.paramValue),
+            req.user.id,
+            req.body.uuid
         ]);
         res.send({ success: true });
     } catch (err) {
@@ -331,7 +338,6 @@ app.put('/api/v1/events', verifyToken, async (req, res) => {
 app.post('/api/v1/events', verifyToken, async (req, res) => {
     try {
         const queryString = `
-        
             INSERT INTO "event" (
                 chore_id,
                 status,
@@ -347,7 +353,7 @@ app.post('/api/v1/events', verifyToken, async (req, res) => {
         `;
         await database.query(queryString, [
             req.body.status,
-            req.body.completedAt,
+            req.body.completed_at,
             req.user.id,
             req.body.choreUuid
         ]);

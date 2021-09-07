@@ -4,7 +4,7 @@ import AddIcon from '@material-ui/icons/Add';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import { filterHeadStyles as useStyles } from './styles';
-import FilterInput from './FilterInput';
+import FilterInput from './ToDoListFilterInput';
 import { useSelector, useDispatch } from 'react-redux';
 import agenda from '../../../slices/agendaSlice';
 import VisibilityIcon from '@material-ui/icons/Visibility';

@@ -33,16 +33,13 @@ export default function ToDoList() {
     const [orderBy, setOrderBy] = React.useState('name');
     const { data: chores, error: choresError, isLoading: isChoresLoading } = useGetChoresQuery();
     const { data: events, error: eventsError, isLoading: isEventsLoading } = useGetTodayEventsQuery();
-    const items = Object.values({ ...formatChores(chores), ...formatEvents(events) });
     const filters = useSelector((state) => state.agenda.filters);
     const sorts = useSelector((state) => state.agenda.sorts);
     const [rows, setRows] = useState([]);
 
     useEffect(() => {
-        if (items) {
-            setRows(calculateRows(items, filters, sorts));
-        }
-    }, [sorts, items, filters]);
+        setRows(calculateRows({ chores, events, filters, sorts }));
+    }, [chores, events, sorts, filters]);
 
     const handleRequestSort = (event, property) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -103,7 +100,9 @@ export default function ToDoList() {
     );
 }
 
-const calculateRows = function (items, filters, sorts) {
+const calculateRows = function ({ chores, events, filters, sorts }) {
+    const items = Object.values({ ...formatChores(chores), ...formatEvents(events) });
+
     return stableSort(items.filter(item => {
         if (item.type === 'event') return true;
         const foundEvent = items.find(duplicateItem => duplicateItem.type === 'event' && duplicateItem.choreUuid === item.uuid);

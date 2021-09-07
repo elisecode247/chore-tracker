@@ -10,7 +10,7 @@ import { useDispatch } from 'react-redux';
 import agenda from '../../../slices/agendaSlice';
 import agendaStatuses from '../../../constants/agendaStatuses';
 
-export default function FilterInput({ filter, headCells }) {
+export default function ToDoListFilterInput({ filter, headCells }) {
     const classes = useStyles();
     const { deleteFilter, updateFilter } = agenda.actions;
     const dispatch = useDispatch();
