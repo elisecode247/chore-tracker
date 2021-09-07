@@ -117,7 +117,6 @@ export const filterHeadStyles = makeStyles((theme) => ({
 
 export const toDoListStyles = makeStyles((theme) => ({
     root: {
-        margin: '1rem',
         padding: '1rem'
     },
     paper: {

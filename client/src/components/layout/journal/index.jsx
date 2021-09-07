@@ -1,11 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import Button from '@material-ui/core/Button';
+import IconButton from '@material-ui/core/IconButton';
 import SaveIcon from '@material-ui/icons/Save';
 import Typography from '@material-ui/core/Typography';
+import VisibilityIcon from '@material-ui/icons/Visibility';
+import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
 import {
     useGetTodayJournalEntryQuery,
     useAddJournalEntryMutation,
@@ -20,8 +23,7 @@ import TipTapMenu from '../../TipTapMenu';
 
 const useStyles = makeStyles({
     root: {
-        margin: '1rem',
-        minWidth: 275,
+        padding: '1rem'
     },
     title: {
         fontSize: '0.8rem',
@@ -35,6 +37,7 @@ export default function Journal() {
     const [updateJournalEntry, { isLoading: isJournalEntryUpdateLoading }] = useUpdateJournalEntryMutation();
     const { settings } = useSelector(userSelector);
     const journalSettings = (Object.values(settings).length && settings) || defaultJournalSettings;
+    const [view, setView] = useState(localStorage.getItem('journalView') === 'true');
 
     const editor = useEditor({
         extensions: [
@@ -54,6 +57,11 @@ export default function Journal() {
         }
     }, [journalEntry, editor, journalSettings]);
 
+    const handleViewChange = function() {
+        setView(!view);
+        localStorage.setItem('journalView', !view);
+    };
+
     const handleSave = function() {
         if (journalEntry.length) {
             updateJournalEntry({ entry: editor.getHTML(), uuid: journalEntry[0].uuid });
@@ -71,22 +79,27 @@ export default function Journal() {
 
     return (
         <Card className={classes.root} elevation={3}>
-            <CardContent>
-                <Typography variant="h5" component="h2">
-                Journal
-                </Typography>
-                <Typography className={classes.title} color="textSecondary" gutterBottom>
-                    {journalSettings.journalInstructions}
-                </Typography>
-                <EditorContent className={classes.entryContainer} editor={editor} />
-                <TipTapMenu editor={editor} />
-            </CardContent>
-            <CardActions className={classes.root}>
-                <Button size="small" onClick={handleSave}>
-                    <SaveIcon />
-                    Save
-                </Button>
-            </CardActions>
+            {!view ? (<Button onClick={handleViewChange}><VisibilityOffIcon />Journal</Button>) : (
+                <>
+                    <CardContent>
+                        <Typography variant="h5" component="h2">
+                            Journal
+                            <IconButton onClick={handleViewChange}><VisibilityIcon /></IconButton>
+                        </Typography>
+                        <Typography className={classes.title} color="textSecondary" gutterBottom>
+                            {journalSettings.journalInstructions}
+                        </Typography>
+                        <EditorContent className={classes.entryContainer} editor={editor} />
+                        <TipTapMenu editor={editor} />
+                    </CardContent>
+                    <CardActions className={classes.root}>
+                        <Button size="small" onClick={handleSave}>
+                            <SaveIcon />
+                            Save
+                        </Button>
+                    </CardActions>
+                </>
+            )}
         </Card>
     );
 }

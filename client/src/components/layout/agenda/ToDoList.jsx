@@ -1,4 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import Button from '@material-ui/core/Button';
+import IconButton from '@material-ui/core/IconButton';
+import VisibilityIcon from '@material-ui/icons/Visibility';
+import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
 import Card from '@material-ui/core/Card';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -24,6 +28,7 @@ export default function ToDoList() {
         return true;
     });
     const classes = useStyles();
+    const [view, setView] = useState(localStorage.getItem('agendaView') === 'true');
     const [order, setOrder] = React.useState('asc');
     const [orderBy, setOrderBy] = React.useState('name');
     const { data: chores, error: choresError, isLoading: isChoresLoading } = useGetChoresQuery();
@@ -45,6 +50,11 @@ export default function ToDoList() {
         setOrderBy(property);
     };
 
+    const handleViewChange = function () {
+        setView(!view);
+        localStorage.setItem('agendaView', !view);
+    };
+
     if (choresError || eventsError) {
         return (<div>Error</div>);
     }
@@ -55,40 +65,45 @@ export default function ToDoList() {
 
     return (
         <Card className={classes.root} elevation={3}>
-            <Typography variant="h5" component="h2">
-                Today's Items
-            </Typography>
-            <ToDoListFilterHead headCells={headCells} />
-            <ToDoListSortHead headCells={headCells} />
-            <TableContainer>
-                <Table
-                    className={classes.table}
-                    aria-labelledby="tableTitle"
-                    size={'medium'}
-                    aria-label="enhanced table"
-                >
-                    <ToDoListHead
-                        headCells={headCells}
-                        order={order}
-                        orderBy={orderBy}
-                        onRequestSort={handleRequestSort}
-                        rowCount={rows.length}
-                    />
-                    <TableBody>
-                        {rows.map((row, key) => {
-                            const labelId = `enhanced-table-checkbox-${key}`;
-                            return (
-                                <ToDoListItem headCells={headCells} key={key} labelId={labelId} row={row} />
-                            );
-                        })}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+            {!view ? (<Button onClick={handleViewChange}><VisibilityOffIcon />Today's Items</Button>) : (
+                <>
+                    <Typography variant="h5" component="h2">
+                        Today's Items
+                        <IconButton onClick={handleViewChange}><VisibilityIcon /></IconButton>
+                    </Typography>
+                    <ToDoListFilterHead headCells={headCells} />
+                    <ToDoListSortHead headCells={headCells} />
+                    <TableContainer>
+                        <Table
+                            className={classes.table}
+                            aria-labelledby="tableTitle"
+                            size={'medium'}
+                            aria-label="enhanced table"
+                        >
+                            <ToDoListHead
+                                headCells={headCells}
+                                order={order}
+                                orderBy={orderBy}
+                                onRequestSort={handleRequestSort}
+                                rowCount={rows.length}
+                            />
+                            <TableBody>
+                                {rows.map((row, key) => {
+                                    const labelId = `enhanced-table-checkbox-${key}`;
+                                    return (
+                                        <ToDoListItem headCells={headCells} key={key} labelId={labelId} row={row} />
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </>
+            )}
         </Card>
     );
 }
 
-const calculateRows = function(items, filters, sorts) {
+const calculateRows = function (items, filters, sorts) {
     return stableSort(items.filter(item => {
         if (item.type === 'event') return true;
         const foundEvent = items.find(duplicateItem => duplicateItem.type === 'event' && duplicateItem.choreUuid === item.uuid);
@@ -99,7 +114,7 @@ const calculateRows = function(items, filters, sorts) {
         filters.forEach(filter => {
             if (keep === true) return;
             const { name, operator, value } = filter;
-            if (!name || !operator || (Array.isArray(value) ? !value.length : !value) ) {
+            if (!name || !operator || (Array.isArray(value) ? !value.length : !value)) {
                 keep = true;
                 return;
             }
