@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Card from '@material-ui/core/Card';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -6,14 +6,16 @@ import TableContainer from '@material-ui/core/TableContainer';
 import { useGetChoresQuery } from '../../../slices/choresApiSlice';
 import { useGetTodayEventsQuery } from '../../../slices/eventsApiSlice';
 import { formatChores, formatEvents } from '../../../utilities/chores';
-import { getComparator, stableSort } from './utilities';
+import { stableSort } from './utilities';
 import ToDoListHead from './ToDoListHead';
 import ToDoListItem from './ToDoListItem';
 import { toDoListStyles as useStyles } from './styles';
 import { columns } from './utilities';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import ToDoListFilterHead from './ToDoListFilterHead';
+import ToDoListSortHead from './ToDoListSortHead';
 import { useSelector } from 'react-redux';
+import Typography from '@material-ui/core/Typography';
 
 export default function ToDoList() {
     const desktop = useMediaQuery('(min-width:650px)');
@@ -28,7 +30,66 @@ export default function ToDoList() {
     const { data: events, error: eventsError, isLoading: isEventsLoading } = useGetTodayEventsQuery();
     const items = Object.values({ ...formatChores(chores), ...formatEvents(events) });
     const filters = useSelector((state) => state.agenda.filters);
-    const rows = stableSort(items.filter(item => {
+    const sorts = useSelector((state) => state.agenda.sorts);
+    const [rows, setRows] = useState([]);
+
+    useEffect(() => {
+        if (items) {
+            setRows(calculateRows(items, filters, sorts));
+        }
+    }, [sorts, items, filters]);
+
+    const handleRequestSort = (event, property) => {
+        const isAsc = orderBy === property && order === 'asc';
+        setOrder(isAsc ? 'desc' : 'asc');
+        setOrderBy(property);
+    };
+
+    if (choresError || eventsError) {
+        return (<div>Error</div>);
+    }
+
+    if (isChoresLoading || isEventsLoading) {
+        return (<div>Loading...</div>);
+    }
+
+    return (
+        <Card className={classes.root} elevation={3}>
+            <Typography variant="h5" component="h2">
+                Today's Items
+            </Typography>
+            <ToDoListFilterHead headCells={headCells} />
+            <ToDoListSortHead headCells={headCells} />
+            <TableContainer>
+                <Table
+                    className={classes.table}
+                    aria-labelledby="tableTitle"
+                    size={'medium'}
+                    aria-label="enhanced table"
+                >
+                    <ToDoListHead
+                        headCells={headCells}
+                        order={order}
+                        orderBy={orderBy}
+                        onRequestSort={handleRequestSort}
+                        rowCount={rows.length}
+                    />
+                    <TableBody>
+                        {rows.map((row, key) => {
+                            const labelId = `enhanced-table-checkbox-${key}`;
+                            return (
+                                <ToDoListItem headCells={headCells} key={key} labelId={labelId} row={row} />
+                            );
+                        })}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </Card>
+    );
+}
+
+const calculateRows = function(items, filters, sorts) {
+    return stableSort(items.filter(item => {
         if (item.type === 'event') return true;
         const foundEvent = items.find(duplicateItem => duplicateItem.type === 'event' && duplicateItem.choreUuid === item.uuid);
         return !foundEvent;
@@ -56,54 +117,5 @@ export default function ToDoList() {
             }
         });
         return keep;
-    }), getComparator(order, orderBy));
-
-    const handleRequestSort = (event, property) => {
-        const isAsc = orderBy === property && order === 'asc';
-        setOrder(isAsc ? 'desc' : 'asc');
-        setOrderBy(property);
-    };
-
-    const handleFilterChange = (event, property) => {
-
-    };
-
-    if (choresError || eventsError) {
-        return (<div>Error</div>);
-    }
-
-    if (isChoresLoading || isEventsLoading) {
-        return (<div>Loading...</div>);
-    }
-
-    return (
-        <Card className={classes.root} elevation={3}>
-            <ToDoListFilterHead headCells={headCells} />
-            <TableContainer>
-                <Table
-                    className={classes.table}
-                    aria-labelledby="tableTitle"
-                    size={'medium'}
-                    aria-label="enhanced table"
-                >
-                    <ToDoListHead
-                        headCells={headCells}
-                        order={order}
-                        orderBy={orderBy}
-                        onFilterChange={handleFilterChange}
-                        onRequestSort={handleRequestSort}
-                        rowCount={rows.length}
-                    />
-                    <TableBody>
-                        {rows.map((row, key) => {
-                            const labelId = `enhanced-table-checkbox-${key}`;
-                            return (
-                                <ToDoListItem headCells={headCells} key={key} labelId={labelId} row={row} />
-                            );
-                        })}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </Card>
-    );
-}
+    }), sorts);
+};

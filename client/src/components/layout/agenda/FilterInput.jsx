@@ -55,12 +55,20 @@ export default function FilterInput({ filter, headCells }) {
                     value={filter.operator}
                     onChange={handleOperatorChange}
                 >
-                    {filter.name === 'status' ? (
-                        [
-                            <MenuItem key={0} value="includes">Is</MenuItem>,
-                            <MenuItem key={1} value="!includes">Is Not</MenuItem>
-                        ]
-                    ) : headCells.map((m,key) => {
+                    {filter.name === 'status' ? [
+                        <MenuItem key={0} value="includes">Is</MenuItem>,
+                        <MenuItem key={1} value="!includes">Is Not</MenuItem>
+                    ] : filter.name === 'due' ? [
+                        <MenuItem key={1}>Morning</MenuItem>,
+                        <MenuItem key={2}>Afternoon</MenuItem>,
+                        <MenuItem key={3}>Evening</MenuItem>,
+                        <MenuItem key={3}>Time</MenuItem>
+                    ] : filter.name === 'frequency' ? [
+                        <MenuItem key={1}>Daily</MenuItem>,
+                        <MenuItem key={2}>Weekly</MenuItem>,
+                        <MenuItem key={3}>Monthly</MenuItem>,
+                        <MenuItem key={4}>Yearly</MenuItem>
+                    ] : headCells.map((m,key) => {
                         return (
                             <MenuItem key={key} value={m.id}>{m.label}</MenuItem>
                         );
@@ -78,14 +86,26 @@ export default function FilterInput({ filter, headCells }) {
                 >
                     {filter.name === 'status' ? Object.entries(agendaStatuses).map(([value, label], key) => (
                         <MenuItem key={key} value={value}>{label}</MenuItem>
-                    )) : headCells.map((m,key) => {
+                    )) : filter.name === 'due' ? [
+                        <MenuItem key={1}>Morning</MenuItem>,
+                        <MenuItem key={2}>Afternoon</MenuItem>,
+                        <MenuItem key={3}>Evening</MenuItem>,
+                        <MenuItem key={3}>Time</MenuItem>
+                    ] : filter.name === 'frequency' ? [
+                        <MenuItem key={1}>Daily</MenuItem>,
+                        <MenuItem key={2}>Weekly</MenuItem>,
+                        <MenuItem key={3}>Monthly</MenuItem>,
+                        <MenuItem key={4}>Yearly</MenuItem>
+                    ] : headCells.map((m,key) => {
                         return (
                             <MenuItem key={key} value={m.id}>{m.label}</MenuItem>
                         );
                     })}
                 </Select>
             </FormControl>
-            <IconButton onClick={() => handleDeleteClick(filter.id)}><DeleteIcon /></IconButton>
+            <IconButton onClick={() => handleDeleteClick(filter.id)} variant="filled">
+                <DeleteIcon />
+            </IconButton>
         </div>
     );
 }

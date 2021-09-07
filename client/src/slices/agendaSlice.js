@@ -1,8 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
 const savedFilters = localStorage.getItem('filters');
+const savedSorts = localStorage.getItem('sorts');
 
 const initialState = {
     filters: JSON.parse(savedFilters) || [],
+    sorts: JSON.parse(savedSorts) || [{ id: 0, name: 'name', direction: 'asc' }]
 };
 
 export const agendaSlice = createSlice({
@@ -24,6 +26,30 @@ export const agendaSlice = createSlice({
                 state.filters[action.payload.id].operator = '';
                 state.filters[action.payload.id].value = action.payload.value === 'status' ? [] : '';
             }
+        },
+        addSort: (state) => {
+            state.sorts.push({ id: state.sorts.length, name: '', direction: 'asc' });
+        },
+        deleteSort: (state, action) => {
+            state.sorts.splice(action.payload, 1).sort((a, b) => a.id - b.id);
+            for (let i= 0; i < state.sorts.length; i++) {
+                state.sorts[i].id = i;
+            }
+        },
+        updateSort: (state, action) => {
+            state.sorts[action.payload.id][action.payload.name] = action.payload.value;
+        },
+        reOrderSorts: (state, action) => {
+            const { dragIndex, hoverIndex, sorts } = action.payload;
+            const hoverItem = { ...sorts[hoverIndex], id: dragIndex };
+            const dragItem = { ...sorts[dragIndex], id: hoverIndex };
+            const updatedSorts = [...sorts ];
+            updatedSorts[hoverIndex] = dragItem;
+            updatedSorts[dragIndex] = hoverItem;
+            return {
+                ...state,
+                sorts: updatedSorts
+            };
         }
     },
 });
@@ -31,6 +57,6 @@ export const agendaSlice = createSlice({
 export const agendaName = agendaSlice.name;
 export const agendaReducer = agendaSlice.reducer;
 
-export const { addFilter, deleteFilter } = agendaSlice.actions;
+export const { addFilter, deleteFilter, updateFilter, addSort, deleteSort, updateSort, reOrderSorts } = agendaSlice.actions;
 
 export default agendaSlice;

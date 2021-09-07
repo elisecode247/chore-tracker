@@ -26,4 +26,5 @@ export const store = configureStore({
 
 store.subscribe(()=>{
     localStorage.setItem('filters', JSON.stringify(store.getState().agenda.filters));
+    localStorage.setItem('sorts', JSON.stringify(store.getState().agenda.sorts));
 });

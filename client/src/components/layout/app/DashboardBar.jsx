@@ -12,18 +12,22 @@ import Tab from '@material-ui/core/Tab';
 const useStyles = makeStyles((theme) => ({
     root: {
         flexGrow: 1,
+        marginBottom: '2rem',
+        padding: '1rem',
+        minHeight: '64px'
     },
     menuButton: {
         marginRight: theme.spacing(2),
+    },
+    tabs: {
+        width: '100%'
     },
     title: {
         flexGrow: 1,
     },
     login: {
         // TODO fix later for mobile
-        position: 'absolute',
-        right: '0',
-        bottom: '0px'
+        float: 'right'
     }
 }));
 
@@ -67,7 +71,6 @@ export default function DashboardBar({ isFetching, onLogin, onLogOut, selectedTa
                         <Tab label="Chores" {...a11yProps(2)} />
                         <Tab label="Add New Chore" {...a11yProps(3)} />
                         <Tab label="Customizations" {...a11yProps(4)} />
-
                     </Tabs>
                     <FormGroup className={classes.login}>
                         <FormControlLabel

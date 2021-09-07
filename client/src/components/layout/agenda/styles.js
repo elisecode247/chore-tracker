@@ -1,5 +1,22 @@
 import makeStyles from '@material-ui/core/styles/makeStyles';
 
+export const dragDownHoverStyles = {
+    border: '1px dotted blue',
+    borderBottom: '3px dashed blue',
+    backgroundColor: 'lightgrey',
+};
+
+export const dragUpHoverStyles = {
+    border: '1px dashed blue',
+    backgroundColor: 'lightgrey',
+    borderTop: '3px dashed blue'
+};
+
+export const isDraggingStyles = {
+    border: '1px dashed grey',
+    backgroundColor: '#fff03',
+};
+
 export const agendaStyles = makeStyles((theme) => ({
     root: {
         display: 'flex',
@@ -40,28 +57,68 @@ export const agendaStyles = makeStyles((theme) => ({
     },
 }));
 
-export const filterHeadStyles = makeStyles((theme) => ({
+export const sortHeadStyles = makeStyles((theme) => ({
     root: {
-        margin: '1rem',
-        display: 'flex',
-        flexDirection: 'row'
+        margin: '1rem'
     },
-    filterContainer: {
-        margin: '0.5rem',
+    sortsContainer: {
+        margin: '0rem 0',
+        display: 'flex',
+        flexDirection: 'column',
+        flexWrap: 'wrap',
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start'
+    },
+    sortContainer: {
+        margin: '0.5rem 0',
         display: 'flex',
         flexDirection: 'row',
-        alignItems: 'center',
+        flexWrap: 'wrap',
+        alignItems: 'flex-end',
+        justifyContent: 'flex-start',
+        border: '1px dashed gray',
+        padding: '0.5rem 1rem',
+        marginBottom: '.5rem',
+        cursor: 'move'
+    },
+    formControl: {
+        margin: theme.spacing(1),
+        minWidth: 120,
+    },
+    formControlNumber: {
+        margin: theme.spacing(1),
+        width: 50
+    },
+    inline: {
+        display: 'inline'
+    }
+}));
+
+export const filterHeadStyles = makeStyles((theme) => ({
+    root: {
+        margin: '1rem'
+    },
+    filterContainer: {
+        margin: '0.5rem 0',
+        display: 'flex',
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        alignItems: 'flex-end',
         justifyContent: 'flex-start'
     },
     formControl: {
         margin: theme.spacing(1),
         minWidth: 120,
+    },
+    inline: {
+        display: 'inline'
     }
 }));
 
 export const toDoListStyles = makeStyles((theme) => ({
     root: {
-        margin: '1rem'
+        margin: '1rem',
+        padding: '1rem'
     },
     paper: {
         width: '100%',
