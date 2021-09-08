@@ -9,9 +9,9 @@ export const columns = [
 ];
 
 const descendingComparator = function (a, b, orderBy) {
-    const dataType = columns.find(cell => cell.id === orderBy);
+    const column = columns.find(cell => cell.id === orderBy);
 
-    if (dataType.numeric) {
+    if (column.dataType === 'date') {
         if (!a[orderBy] && !b[orderBy]) {
             return 0;
         }
@@ -41,6 +41,7 @@ export function getComparator(order, orderBy) {
 }
 
 export function stableSort(array, sorts) {
+    // TODO fix sort for multiple columns sorted in order
     const stabilizedThis = array.map((el, index) => [el, index]);
     sorts.forEach(sort => {
         if (!sort.name) return 0;
