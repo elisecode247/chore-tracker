@@ -16,6 +16,7 @@ import ToDoListItem from './ToDoListItem';
 import { toDoListStyles as useStyles } from './styles';
 import { columns } from './utilities';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
+import ToDoListTagFilterHead from './ToDoListTagFilterHead';
 import ToDoListFilterHead from './ToDoListFilterHead';
 import ToDoListSortHead from './ToDoListSortHead';
 import { useSelector } from 'react-redux';
@@ -36,10 +37,11 @@ export default function ToDoList() {
     const filters = useSelector((state) => state.agenda.filters);
     const sorts = useSelector((state) => state.agenda.sorts);
     const [rows, setRows] = useState([]);
+    const [selectedTags, setSelectedTags] = useState((localStorage.getItem('selectedTags') && JSON.parse(localStorage.getItem('selectedTags'))) || []);
 
     useEffect(() => {
-        setRows(calculateRows({ chores, events, filters, sorts }));
-    }, [chores, events, sorts, filters]);
+        setRows(calculateRows({ chores, events, filters, selectedTags, sorts }));
+    }, [chores, events, selectedTags, sorts, filters]);
 
     const handleRequestSort = (event, property) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -68,6 +70,7 @@ export default function ToDoList() {
                         Today's Items
                         <IconButton onClick={handleViewChange}><VisibilityIcon /></IconButton>
                     </Typography>
+                    <ToDoListTagFilterHead selectedTags={selectedTags} setSelectedTags={setSelectedTags} />
                     <ToDoListFilterHead headCells={headCells} />
                     <ToDoListSortHead headCells={headCells} />
                     <TableContainer>
@@ -100,7 +103,7 @@ export default function ToDoList() {
     );
 }
 
-const calculateRows = function ({ chores, events, filters, sorts }) {
+const calculateRows = function ({ chores, events, filters, selectedTags, sorts }) {
     const items = Object.values({ ...formatChores(chores), ...formatEvents(events) });
 
     return stableSort(items.filter(item => {
@@ -130,6 +133,19 @@ const calculateRows = function ({ chores, events, filters, sorts }) {
                 }
             }
         });
-        return keep;
+        let matchesAllTags = true;
+        if (selectedTags.length) {
+            if(!item.tags.length) {
+                matchesAllTags = false;
+            } else {
+                const itemTags = item.tags.map(t => t.uuid);
+                selectedTags.forEach(t => {
+                    if (!itemTags.includes(t)) {
+                        matchesAllTags = false;
+                    }
+                });
+            }
+        }
+        return matchesAllTags && keep;
     }), sorts);
 };
