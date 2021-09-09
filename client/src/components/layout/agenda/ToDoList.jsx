@@ -37,7 +37,7 @@ export default function ToDoList() {
     const filters = useSelector((state) => state.agenda.filters);
     const sorts = useSelector((state) => state.agenda.sorts);
     const [rows, setRows] = useState([]);
-    const [selectedTags, setSelectedTags] = useState((localStorage.getItem('selectedTags') && JSON.parse(localStorage.getItem('selectedTags'))) || []);
+    const [selectedTags, setSelectedTags] = useState((localStorage.getItem('agendaSelectedTags') && JSON.parse(localStorage.getItem('agendaSelectedTags'))) || []);
 
     useEffect(() => {
         setRows(calculateRows({ chores, events, filters, selectedTags, sorts }));
@@ -111,8 +111,8 @@ const calculateRows = function ({ chores, events, filters, selectedTags, sorts }
         const foundEvent = items.find(duplicateItem => duplicateItem.type === 'event' && duplicateItem.choreUuid === item.uuid);
         return !foundEvent;
     }).filter(item => {
-        if (!filters.length) return true;
-        let keep = false;
+        let keep = !filters.length;
+
         filters.forEach(filter => {
             if (keep === true) return;
             const { name, operator, value } = filter;

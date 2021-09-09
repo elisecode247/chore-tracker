@@ -12,32 +12,33 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import Chip from '@material-ui/core/Chip';
 
-export default function ToDoListTagFilterHead({ selectedTags, setSelectedTags }) {
+export default function ChoresListTagFilterHead({ selectedTags, setSelectedTags }) {
     const classes = useStyles();
     const { data: tags, error: errorTags, isLoading: isLoadingTags } = useGetTagsQuery();
-    const [view, setView] = useState(localStorage.getItem('tagFilterView') === 'true');
+    const [view, setView] = useState(localStorage.getItem('choresListTagFilterView') === 'true');
 
     const handleViewChange = function() {
         setView(!view);
-        localStorage.setItem('tagFilterView', !view);
+        localStorage.setItem('choresListTagFilterView', !view);
     };
 
     if (!view) {
-        return (<Button onClick={handleViewChange}><VisibilityOffIcon />Tag Filter</Button>);
+        return (<Button className={classes.fontColor} onClick={handleViewChange}><VisibilityOffIcon />Category Filter</Button>);
     }
     const handleSelectedTagsChange = (event) => {
         const { value } = event.target;
         setSelectedTags(value);
-        localStorage.setItem('agendaSelectedTags', JSON.stringify(value));
+        localStorage.setItem('choresListSelectedTags', JSON.stringify(value));
     };
     return (
         <div className={classes.root}>
-            <IconButton onClick={handleViewChange}><VisibilityIcon /></IconButton>
-            <h3 className={classes.inline}>Tag Filter</h3>
+            <IconButton className={classes.fontColor} onClick={handleViewChange}><VisibilityIcon /></IconButton>
+            <h3 className={`${classes.inline}`}>Category Filter</h3>
             {isLoadingTags ? (<span>Loading Tags...</span>) : ((tags && tags.length) || !errorTags ? (
-                <FormControl variant="filled" className={classes.formControl}>
+                <FormControl variant="outlined" className={classes.formControl}>
                     <Select
-                        id="demo-multiple-chip"
+                        className={classes.fontColor}
+                        id="chores-list-tag-select"
                         multiple
                         value={selectedTags}
                         onChange={handleSelectedTagsChange}
@@ -54,7 +55,6 @@ export default function ToDoListTagFilterHead({ selectedTags, setSelectedTags })
                                 }
                             </div>
                         )}
-                        variant="outlined"
                     >
                         {tags.map((tag, index) => {
                             return (

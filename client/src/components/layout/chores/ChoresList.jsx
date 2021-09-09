@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { useGetChoresQuery } from '../../../slices/choresApiSlice';
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -8,10 +11,16 @@ import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import ChoreListRow from './ChoreListRow';
 import { formatChores } from '../../../utilities/chores';
+import { choresListStyles as useStyles } from './styles';
+import ChoresListTagFilterHead from './ChoresListTagFilterHead';
 
 export default function ChoresList() {
+    const classes = useStyles();
     const { data: chores, error, isLoading } = useGetChoresQuery();
     const formattedChores = Object.values(formatChores(chores));
+    const [selectedTags, setSelectedTags] = useState((
+        localStorage.getItem('choresListSelectedTags') && JSON.parse(localStorage.getItem('choresListSelectedTags'))) || []
+    );
 
     if (error) {
         return (<div>Error</div>);
@@ -22,24 +31,46 @@ export default function ChoresList() {
     }
 
     return (
-        <TableContainer component={Paper}>
-            <Table aria-label="collapsible table">
-                <TableHead>
-                    <TableRow>
-                        <TableCell />
-                        <TableCell>Active</TableCell>
-                        <TableCell>Name</TableCell>
-                        <TableCell>When</TableCell>
-                        <TableCell>Categories</TableCell>
-                        <TableCell></TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {formattedChores.map((chore, idx) => {
-                        return (<ChoreListRow key={idx} chore={chore} />);
-                    })}
-                </TableBody>
-            </Table>
-        </TableContainer>
+        <div className={classes.root}>
+            <AppBar className={classes.appBar} position="static">
+                <Toolbar>
+                    <ChoresListTagFilterHead selectedTags={selectedTags} setSelectedTags={setSelectedTags}/>
+                </Toolbar>
+            </AppBar>
+            <TableContainer component={Paper}>
+                <Table aria-label="collapsible table">
+                    <TableHead>
+                        <TableRow>
+                            <TableCell />
+                            <TableCell>Active</TableCell>
+                            <TableCell>Name</TableCell>
+                            <TableCell>When</TableCell>
+                            <TableCell>Categories</TableCell>
+                            <TableCell></TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {formattedChores.filter(row => {
+                            let matchesAllTags = true;
+                            if (selectedTags.length) {
+                                if(!row.tags.length) {
+                                    matchesAllTags = false;
+                                } else {
+                                    const itemTags = row.tags.map(t => t.uuid);
+                                    selectedTags.forEach(t => {
+                                        if (!itemTags.includes(t)) {
+                                            matchesAllTags = false;
+                                        }
+                                    });
+                                }
+                            }
+                            return matchesAllTags;
+                        }).map((chore, idx) => {
+                            return (<ChoreListRow key={idx} chore={chore} />);
+                        })}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </div>
     );
 }

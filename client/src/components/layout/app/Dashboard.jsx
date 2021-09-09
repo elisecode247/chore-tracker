@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import DashboardBar from './DashboardBar';
-import ChoreListBar from '../chores/ChoreListBar';
 import ChoresList from '../chores/ChoresList';
 import EventsList from '../events/EventsList';
 import TabPanel from './TabPanel';
@@ -56,7 +55,6 @@ const Dashboard = function() {
                         <EventsList />
                     </TabPanel>
                     <TabPanel value={selectedTab} index={2}>
-                        <ChoreListBar />
                         <ChoresList />
                     </TabPanel>
                     <TabPanel value={selectedTab} index={3}>

@@ -15,13 +15,27 @@ import format from 'date-fns/format';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import EditIcon from '@material-ui/icons/Edit';
 import Chip from '@material-ui/core/Chip';
-import useStyles from './ChoresListRowStyles';
+import { choresListRowStyles as useStyles } from './styles.js';
 import { DATE_FORMAT } from '../../../constants/dateTimeFormats';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 
 export default function Row({ chore }) {
     const [open, setOpen] = useState(false);
     const classes = useStyles();
     const wrapper = createRef();
+    const editor = useEditor({
+        extensions: [
+            StarterKit,
+        ],
+        editorProps: {
+            attributes: {
+                class: 'journalContainer'
+            }
+        },
+        content: chore.description
+    });
+
     return (
         <>
             <TableRow className={classes.root}>
@@ -49,7 +63,7 @@ export default function Row({ chore }) {
                                 Directions
                             </Typography>
                             {!chore.description ?<p>--</p> : (
-                                <p>{chore.description}</p>
+                                <EditorContent className={classes.entryContainer} editor={editor} id={`chore-description-${chore.uuid}`} />
                             )}
                             <Typography variant="h6" gutterBottom component="span">
                                 Why it's Important

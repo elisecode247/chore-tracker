@@ -42,8 +42,13 @@ export const choresApi = createApi({
                     }),
                     selectedTags
                 },
-            }),
-            invalidatesTags: ['chores']
+                validateStatus: (response, result) => {
+                    if(!result.success) {
+                        console.error(result);
+                    }
+                    return response.status === 200 && result.success;
+                }
+            })
         }),
         updateChore:  builder.mutation({
             query: ({

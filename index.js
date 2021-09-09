@@ -140,6 +140,7 @@ app.get('/api/v1/chores', verifyToken, async (req, res) => {
 app.post('/api/v1/chores', verifyToken, async (req, res) => {
     try {
         const queryString = `
+        WITH ins1 AS (
             INSERT INTO "chore" as c (
                 user_id,
                 name,
@@ -151,9 +152,15 @@ app.post('/api/v1/chores', verifyToken, async (req, res) => {
                 reason
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-            RETURNING id
+            RETURNING id AS chore_id
+        ), ins2 AS (
+            SELECT id as tag_id FROM tag WHERE uuid = ANY($9::uuid[])
+        )
+            INSERT INTO chore_tag (chore_id, tag_id)
+            SELECT chore_id, tag_id
+            FROM   ins1, ins2
         `;
-        const result = await database.query(queryString, [
+        await database.query(queryString, [
             req.user.id,
             req.body.name,
             req.body.description,
@@ -161,19 +168,10 @@ app.post('/api/v1/chores', verifyToken, async (req, res) => {
             req.body.scheduledAt,
             req.body.hasTime,
             req.body.location,
-            req.body.reason
+            req.body.reason,
+            req.body.selectedTags
         ]);
-        if (result.rows.length && req.body.selectedTags.length) {
-            const queryString = `
-                INSERT INTO chore_tag (chore_id, tag_id)
-                SELECT $1 as chore_id, t.id
-                FROM (SELECT id FROM tag WHERE uuid in ANY($2::int[])) t
-            `;
-            await database.query(queryString, [result.rows[0].id, req.body.selectedTags]);
-            res.send({ success: true });
-        } else {
-            res.send({ success: true });
-        }
+        res.send({ success: true });
     } catch (err) {
         res.send({ success: false, error: err });
     }

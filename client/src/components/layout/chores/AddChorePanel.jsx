@@ -26,21 +26,19 @@ import { addChorePanelStyles as useStyles } from './styles';
 
 export default function AddChorePanel() {
     const { data: tags, error: errorTags, isLoading: isLoadingTags } = useGetTagsQuery();
-    const [addChore, { isLoading }] = useAddChoreMutation();
+    const [addChore, { isLoading, isError, isSuccess }] = useAddChoreMutation();
     const classes = useStyles();
     const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
     const [location, setLocation] = useState('');
     const [reason, setReason] = useState('');
     const [isFrequencyChecked, toggleFrequencyChecked] = useState(true);
     const [frequencyAmount, setFrequencyAmount] = useState(1);
     const [frequencyType, setFrequencyType] = useState('day');
     const [frequencySubtype, setFrequencySubtype] = useState('day');
-    const [frequencySubTypes, setFrequencySubtypes] = useState(getFrequencySubTypeOptions('day'));
+    const [frequencySubTypes, setFrequencySubtypes] = useState(getFrequencySubTypeOptions('once'));
     const [selectedTags, setSelectedTags] = useState([]);
     const [scheduledDate, setScheduledDate] = useState(new Date());
     const [scheduledTime, setScheduledTime] = useState(null);
-
     const editor = useEditor({
         extensions: [
             StarterKit,
@@ -102,7 +100,7 @@ export default function AddChorePanel() {
 
         addChore({
             name,
-            description,
+            description: editor.getHTML(),
             location,
             reason,
             scheduledAt,
@@ -113,18 +111,6 @@ export default function AddChorePanel() {
             frequencySubtype,
             selectedTags
         });
-
-        setName('');
-        setDescription('');
-        setFrequencyAmount(1);
-        setFrequencyType('day');
-        setFrequencySubtype('day');
-        setFrequencySubtypes(getFrequencySubTypeOptions('day'));
-        setReason('');
-        setLocation('');
-        setScheduledDate(new Date());
-        setScheduledTime(null);
-        setSelectedTags([]);
     };
 
     if (isLoading) {
@@ -157,6 +143,8 @@ export default function AddChorePanel() {
                             'aria-label': 'change date',
                         }}
                     />
+                </FormControl>
+                <FormControl className={`${classes.formControl} ${classes.inlineBlock}`} >
                     <KeyboardTimePicker
                         margin="normal"
                         id="scheduled-chore-time-local"
@@ -269,6 +257,12 @@ export default function AddChorePanel() {
                 ) : null)}
                 <Container className={classes.buttonContainer}>
                     <Button variant="contained" color="primary" onClick={handleSubmit}> Submit </Button>
+                    {isError ? (
+                        <div>An unknown error occurred.</div>
+                    ): null}
+                    {isSuccess ? (
+                        <div>Chore Added</div>
+                    ): null}
                 </Container>
             </form>
         </div>
