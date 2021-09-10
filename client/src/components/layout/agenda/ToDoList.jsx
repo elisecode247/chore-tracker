@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import VisibilityIcon from '@material-ui/icons/Visibility';
 import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
 import Card from '@material-ui/core/Card';
+import CardContent from '@material-ui/core/CardContent';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableContainer from '@material-ui/core/TableContainer';
@@ -64,8 +64,15 @@ export default function ToDoList() {
 
     return (
         <Card className={classes.root} elevation={3}>
-            {!view ? (<Button onClick={handleViewChange}><VisibilityOffIcon />Today's Items</Button>) : (
-                <>
+            {!view ? (
+                <CardContent>
+                    <Typography variant="h5" component="h2">
+                            Today's Items
+                        <IconButton onClick={handleViewChange}><VisibilityOffIcon /></IconButton>
+                    </Typography>
+                </CardContent>
+            ) : (
+                <CardContent>
                     <Typography variant="h5" component="h2">
                         Today's Items
                         <IconButton onClick={handleViewChange}><VisibilityIcon /></IconButton>
@@ -97,7 +104,7 @@ export default function ToDoList() {
                             </TableBody>
                         </Table>
                     </TableContainer>
-                </>
+                </CardContent>
             )}
         </Card>
     );

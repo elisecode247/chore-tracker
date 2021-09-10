@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import { filterHeadStyles as useStyles } from './styles';
 import { useGetTagsQuery } from '../../../slices/tagsApiSlice';
@@ -11,11 +10,18 @@ import Input from '@material-ui/core/Input';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import Chip from '@material-ui/core/Chip';
+import Tooltip from '@material-ui/core/Tooltip';
 
 export default function ToDoListTagFilterHead({ selectedTags, setSelectedTags }) {
     const classes = useStyles();
     const { data: tags, error: errorTags, isLoading: isLoadingTags } = useGetTagsQuery();
     const [view, setView] = useState(localStorage.getItem('tagFilterView') === 'true');
+
+    const handleSelectedTagsChange = (event) => {
+        const { value } = event.target;
+        setSelectedTags(value);
+        localStorage.setItem('agendaSelectedTags', JSON.stringify(value));
+    };
 
     const handleViewChange = function() {
         setView(!view);
@@ -23,17 +29,18 @@ export default function ToDoListTagFilterHead({ selectedTags, setSelectedTags })
     };
 
     if (!view) {
-        return (<Button onClick={handleViewChange}><VisibilityOffIcon />Tag Filter</Button>);
+        return (
+            <div className={`${classes.root} ${classes.inline}`}>
+                <h3 className={classes.inline}>Tag Filter</h3>
+                <Tooltip title="Toggle View"><IconButton onClick={handleViewChange}><VisibilityOffIcon /></IconButton></Tooltip>
+            </div>
+        );
     }
-    const handleSelectedTagsChange = (event) => {
-        const { value } = event.target;
-        setSelectedTags(value);
-        localStorage.setItem('agendaSelectedTags', JSON.stringify(value));
-    };
+
     return (
         <div className={classes.root}>
-            <IconButton onClick={handleViewChange}><VisibilityIcon /></IconButton>
             <h3 className={classes.inline}>Tag Filter</h3>
+            <Tooltip title="Toggle View"><IconButton onClick={handleViewChange}><VisibilityIcon /></IconButton></Tooltip>
             {isLoadingTags ? (<span>Loading Tags...</span>) : ((tags && tags.length) || !errorTags ? (
                 <FormControl variant="filled" className={classes.formControl}>
                     <Select

@@ -53,34 +53,36 @@ export const choresApi = createApi({
         updateChore:  builder.mutation({
             query: ({
                 uuid,
+                enabled = null,
                 name = '',
                 description = '',
-                isFrequencyChecked,
+                isFrequencyChecked = null,
                 reason = '',
                 location = '',
-                scheduledAt = new Date(),
-                hasTime = false,
-                frequencyAmount = 1,
-                frequencyType = 'day',
-                frequencySubtype = 'once',
+                scheduledAt = '',
+                hasTime = null,
+                frequencyAmount = 0,
+                frequencyType = '',
+                frequencySubtype = '',
                 selectedTags = []
             }) => ({
                 url: 'chores',
                 method: 'PUT',
                 body: {
                     uuid,
+                    enabled,
                     name,
                     description,
                     reason,
                     location,
                     scheduledAt,
                     hasTime,
-                    frequency: JSON.stringify({
+                    frequency: frequencyAmount ? JSON.stringify({
                         repeatType: isFrequencyChecked ? frequencyType : 'once',
-                        repeatAmount: frequencyAmount || 1,
+                        repeatAmount: frequencyAmount || 0,
                         repeatSubtype: frequencySubtype || ''
-                    }),
-                    selectedTags
+                    }) : null,
+                    ...(selectedTags.length ? { selectedTags } : {})
                 },
             }),
             invalidatesTags: ['chores']

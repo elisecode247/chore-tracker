@@ -59,7 +59,7 @@ export const agendaStyles = makeStyles((theme) => ({
 
 export const sortHeadStyles = makeStyles((theme) => ({
     root: {
-        margin: '1rem'
+        margin: '1rem 0'
     },
     sortsContainer: {
         margin: '0rem 0',
@@ -96,10 +96,12 @@ export const sortHeadStyles = makeStyles((theme) => ({
 
 export const filterHeadStyles = makeStyles((theme) => ({
     root: {
-        margin: '1rem'
+        margin: '1rem 0',
+        display: 'flex',
+        alignItems: 'center'
     },
     filterContainer: {
-        margin: '0.5rem 0',
+        margin: '0',
         display: 'flex',
         flexDirection: 'row',
         flexWrap: 'wrap',
@@ -107,7 +109,7 @@ export const filterHeadStyles = makeStyles((theme) => ({
         justifyContent: 'flex-start'
     },
     formControl: {
-        margin: theme.spacing(1),
+        margin: '0 0.5rem',
         minWidth: 120,
     },
     inline: {

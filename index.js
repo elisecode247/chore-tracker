@@ -177,41 +177,34 @@ app.post('/api/v1/chores', verifyToken, async (req, res) => {
     }
 });
 
-app.put('/api/v1/chores/:chore_uuid', verifyToken, async (req, res) => {
-    try {
-        const queryString = 'UPDATE "chore" SET scheduled_at = $1 WHERE uuid = $2';
-        await database.query(queryString, [req.body.scheduledAt, req.columns.chore_uuid]);
-        res.send({ success: true });
-    } catch (err) {
-        res.send({ success: false, error: err });
-    }
-});
-
 app.put('/api/v1/chores', verifyToken, async (req, res) => {
     try {
+        const params = Object.entries(req.body).reduce((acc, param)=> {
+            const [paramName, paramValue] = param;
+            if (paramName === 'uuid') return acc;
+            console.log('%c 🍓 paramName: ', 'font-size:20px;background-color: #B03734;color:#fff;', paramName);
+            console.log('%c 🥤 typeof paramValue: ', 'font-size:20px;background-color: #6EC1C2;color:#fff;', typeof paramValue);
+            if ((typeof paramValue !== 'boolean' && !paramValue)) return acc;
+            const index = acc.length + 1 || 1;
+            return [
+                ...acc,
+                {
+                    paramKey: `$${index}`,
+                    paramName,
+                    paramValue
+                }
+            ];
+        }, []);
         const queryString = `
-            UPDATE chore
+            UPDATE "chore"
             SET
-                name = $1,
-                description = $2,
-                frequency = $3,
-                scheduled_at = $4,
-                has_time = $5,
-                location = $6,
-                reason = $7
-            WHERE uuid = $8
+                ${params.map(p => ` ${p.paramName} = ${p.paramKey} `).join(', ')}
+            WHERE uuid = $${params.length + 1}
         `;
-        // TODO update tags
-        await database.query(queryString, [
-            req.body.name,
-            req.body.description,
-            req.body.frequency,
-            req.body.scheduledAt,
-            req.body.hasTime,
-            req.body.location,
-            req.body.reason,
-            req.body.uuid
-        ]);
+        console.log('%c 🍥 queryString: ', 'font-size:20px;background-color: #6EC1C2;color:#fff;', queryString);
+        console.log('%c 🍿 [...Object.values(params).map(p => p.paramValue), req.body.uuid]: ', 'font-size:20px;background-color: #ED9EC7;color:#fff;', JSON.stringify([...Object.values(params).map(p => p.paramValue), req.body.uuid]));
+        await database.query(queryString, [...Object.values(params).map(p => p.paramValue), req.body.uuid]);
+        
         res.send({ success: true });
     } catch (err) {
         res.send({ success: false, error: err });

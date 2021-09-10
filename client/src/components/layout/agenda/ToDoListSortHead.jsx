@@ -1,7 +1,6 @@
 
 import React, { useCallback, useState } from 'react';
 import AddIcon from '@material-ui/icons/Add';
-import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import { useSelector, useDispatch } from 'react-redux';
 import { addSort, reOrderSorts } from '../../../slices/agendaSlice';
@@ -9,6 +8,7 @@ import { sortHeadStyles as useStyles } from './styles';
 import SortInput from './ToDoListSortInput';
 import VisibilityIcon from '@material-ui/icons/Visibility';
 import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
+import Tooltip from '@material-ui/core/Tooltip';
 
 
 export default function ToDoListSortHead({ headCells }) {
@@ -27,14 +27,19 @@ export default function ToDoListSortHead({ headCells }) {
     }, [sorts, dispatch]);
 
     if (!view) {
-        return <Button onClick={handleViewChange}><VisibilityOffIcon />Sort</Button>;
+        return (
+            <div className={`${classes.root} ${classes.inline}`}>
+                <h3 className={classes.inline}>Sort</h3>
+                <Tooltip title="Toggle View"><IconButton onClick={handleViewChange}><VisibilityOffIcon /></IconButton></Tooltip>
+            </div>
+        );
     }
 
     return (
         <div className={classes.root}>
-            <IconButton onClick={handleViewChange}><VisibilityIcon /></IconButton>
             <h3 className={classes.inline}>Sort</h3>
-            <IconButton onClick={() => dispatch(addSort())}><AddIcon /></IconButton>
+            <Tooltip title="Toggle View"><IconButton onClick={handleViewChange}><VisibilityIcon /></IconButton></Tooltip>
+            <Tooltip title="Add Sort"><IconButton onClick={() => dispatch(addSort())}><AddIcon /></IconButton></Tooltip>
             <div className={classes.sortsContainer}>
                 {sorts.map((sort, key) => {
                     return (

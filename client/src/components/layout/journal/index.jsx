@@ -79,7 +79,14 @@ export default function Journal() {
 
     return (
         <Card className={classes.root} elevation={3}>
-            {!view ? (<Button onClick={handleViewChange}><VisibilityOffIcon />Journal</Button>) : (
+            {!view ? (
+                <CardContent>
+                    <Typography variant="h5" component="h2">
+                        Journal
+                        <IconButton onClick={handleViewChange}><VisibilityOffIcon /></IconButton>
+                    </Typography>
+                </CardContent>
+            ) : (
                 <>
                     <CardContent>
                         <Typography variant="h5" component="h2">

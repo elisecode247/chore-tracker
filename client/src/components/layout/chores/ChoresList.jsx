@@ -49,26 +49,22 @@ export default function ChoresList() {
                             <TableCell></TableCell>
                         </TableRow>
                     </TableHead>
-                    <TableBody>
-                        {formattedChores.filter(row => {
-                            let matchesAllTags = true;
-                            if (selectedTags.length) {
-                                if(!row.tags.length) {
-                                    matchesAllTags = false;
-                                } else {
-                                    const itemTags = row.tags.map(t => t.uuid);
-                                    selectedTags.forEach(t => {
-                                        if (!itemTags.includes(t)) {
-                                            matchesAllTags = false;
-                                        }
-                                    });
-                                }
+                    <TableBody>{formattedChores.filter(row => {
+                        let matchesAllTags = true;
+                        if (selectedTags.length) {
+                            if(!row.tags.length) {
+                                matchesAllTags = false;
+                            } else {
+                                const itemTags = row.tags.map(t => t.uuid);
+                                selectedTags.forEach(t => {
+                                    if (!itemTags.includes(t)) {
+                                        matchesAllTags = false;
+                                    }
+                                });
                             }
-                            return matchesAllTags;
-                        }).map((chore, idx) => {
-                            return (<ChoreListRow key={idx} chore={chore} />);
-                        })}
-                    </TableBody>
+                        }
+                        return matchesAllTags;
+                    }).map((chore, idx)=>(<ChoreListRow key={idx} chore={chore} />))}</TableBody>
                 </Table>
             </TableContainer>
         </div>

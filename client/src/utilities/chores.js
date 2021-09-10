@@ -246,6 +246,7 @@ export function formatChores(chores) {
             return {
                 ...choreObject,
                 [`chore-${chore.uuid}-0`]: {
+                    enabled: chore.enabled,
                     type: 'chore',
                     uuid: chore.uuid,
                     name: chore.name,

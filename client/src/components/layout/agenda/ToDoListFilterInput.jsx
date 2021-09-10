@@ -30,7 +30,7 @@ export default function ToDoListFilterInput({ filter, headCells }) {
     };
 
     return (
-        <div className={classes.filterContainer}>
+        <>
             <FormControl className={classes.formControl}>
                 <InputLabel id="filter-name-label">Column</InputLabel>
                 <Select
@@ -106,6 +106,6 @@ export default function ToDoListFilterInput({ filter, headCells }) {
             <IconButton onClick={() => handleDeleteClick(filter.id)} variant="filled">
                 <DeleteIcon />
             </IconButton>
-        </div>
+        </>
     );
 }

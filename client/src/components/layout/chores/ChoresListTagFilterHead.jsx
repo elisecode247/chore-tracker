@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import { filterHeadStyles as useStyles } from './styles';
 import { useGetTagsQuery } from '../../../slices/tagsApiSlice';
@@ -11,6 +10,7 @@ import Input from '@material-ui/core/Input';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import Chip from '@material-ui/core/Chip';
+import Tooltip from '@material-ui/core/Tooltip';
 
 export default function ChoresListTagFilterHead({ selectedTags, setSelectedTags }) {
     const classes = useStyles();
@@ -22,18 +22,29 @@ export default function ChoresListTagFilterHead({ selectedTags, setSelectedTags 
         localStorage.setItem('choresListTagFilterView', !view);
     };
 
-    if (!view) {
-        return (<Button className={classes.fontColor} onClick={handleViewChange}><VisibilityOffIcon />Category Filter</Button>);
-    }
     const handleSelectedTagsChange = (event) => {
         const { value } = event.target;
         setSelectedTags(value);
         localStorage.setItem('choresListSelectedTags', JSON.stringify(value));
     };
+
+    if (!view) {
+        return (
+            <div className={`${classes.root} ${classes.inline}`}>
+                <h3 className={`${classes.inline} ${classes.fontColor}`}>Category Filter</h3>
+                <Tooltip title="Toggle View">
+                    <IconButton className={classes.fontColor} onClick={handleViewChange}><VisibilityOffIcon /></IconButton>
+                </Tooltip>
+            </div>
+        );
+    }
+
     return (
         <div className={classes.root}>
-            <IconButton className={classes.fontColor} onClick={handleViewChange}><VisibilityIcon /></IconButton>
             <h3 className={`${classes.inline}`}>Category Filter</h3>
+            <Tooltip title="Toggle View">
+                <IconButton className={classes.fontColor} onClick={handleViewChange}><VisibilityIcon /></IconButton>
+            </Tooltip>
             {isLoadingTags ? (<span>Loading Tags...</span>) : ((tags && tags.length) || !errorTags ? (
                 <FormControl variant="outlined" className={classes.formControl}>
                     <Select
