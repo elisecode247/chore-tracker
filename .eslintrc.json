@@ -19,7 +19,13 @@
             "error",
             "unix"
         ],
-        "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+        "no-unused-vars": [
+            "error",
+            {
+                "argsIgnorePattern": "^_",
+                "ignoreRestSiblings": true
+            }
+        ],
         "quotes": [
             "error",
             "single"

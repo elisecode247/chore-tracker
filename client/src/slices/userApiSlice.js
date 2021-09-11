@@ -112,7 +112,8 @@ export const updateUserSettings = createAsyncThunk(
             let jsonResponse = await response.json();
 
             if (response.status === 200 && jsonResponse.success === true) {
-                return jsonResponse.data;
+                localStorage.setItem('token', jsonResponse.data.token);
+                return jsonResponse.data.user.settings;
             } else {
                 return thunkAPI.rejectWithValue(jsonResponse.errorMessage);
             }

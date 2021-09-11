@@ -18,13 +18,13 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 
 passport.use(new LocalStrategy(async function (username, password, done) {
     try {
-        const queryString = 'SELECT id, uuid, email, password, settings FROM "user" WHERE email = $1';
+        const queryString = 'SELECT id, uuid, email, password as saved_password, settings FROM "user" WHERE email = $1';
         const result = await database.query(queryString, [username]);
         if (!result.rows.length) return done(null, false);
-
-        const match = await bcrypt.compare(password, result.rows[0].password);
+        const { saved_password: savedPassword, ...user } = result.rows[0];
+        const match = await bcrypt.compare(password, savedPassword);
         if (!match) return done(null, false);
-        if (match) return done(null, result.rows[0]);
+        if (match) return done(null, user);
 
     } catch (err) {
         return done(err, null);
@@ -183,8 +183,6 @@ app.put('/api/v1/chores', verifyToken, async (req, res) => {
             const [paramName, paramValue] = param;
             if (paramName === 'uuid') return acc;
             if (paramName === 'selectedTags') return acc;
-            console.log('%c 🍓 paramName: ', 'font-size:20px;background-color: #B03734;color:#fff;', paramName);
-            console.log('%c 🥤 typeof paramValue: ', 'font-size:20px;background-color: #6EC1C2;color:#fff;', typeof paramValue);
             if ((typeof paramValue !== 'boolean' && !paramValue)) return acc;
             const index = acc.length + 1 || 1;
             return [
@@ -381,7 +379,8 @@ app.put('/api/v1/user/settings', verifyToken, async (req, res) => {
         if (!result.rows.length) {
             res.send({ success: false, errorMessage: 'An unknown error occurred.' });
         } else {
-            res.send({ success: true, data: result.rows[0].settings });
+            const user = { ...req.user, settings: result.rows[0].settings };
+            res.send({ success: true, data: { user, token: jwt.sign(user, accessTokenSecret) }});
         }
     } catch (err) {
         res.send({ success: false, error: err });

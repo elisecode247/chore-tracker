@@ -13,7 +13,19 @@ code {
     monospace;
 }
 
-.journalContainer {
+.textEditorContainer {
   background-color: #f0efe5;
   padding: 0.25rem 1rem;
+}
+
+.visuallyHidden {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  top: 20px;
+  width: 1px;
 }

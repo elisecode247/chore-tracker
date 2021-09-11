@@ -1,28 +1,28 @@
 import { useEffect, useState } from 'react';
-import { MuiPickersUtilsProvider } from '@material-ui/pickers';
-import DateFnsUtils from '@date-io/date-fns';
 import { useDispatch, useSelector } from 'react-redux';
 import { userSelector } from '../../../slices/userApiSlice';
 import makeStyles from '@material-ui/core/styles/makeStyles';
-import Card from '@material-ui/core/Card';
-import CardActions from '@material-ui/core/CardActions';
-import CardContent from '@material-ui/core/CardContent';
+import Paper from '@material-ui/core/Paper';
 import TextField from '@material-ui/core/TextField';
-import Button from '@material-ui/core/Button';
+import IconButton from '@material-ui/core/IconButton';
 import SaveIcon from '@material-ui/icons/Save';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import InputLabel from '@material-ui/core/InputLabel';
 import Typography from '@material-ui/core/Typography';
 import { updateUserSettings } from '../../../slices/userApiSlice';
-import { defaultJournalSettings } from '../../../constants/defaultValues';
+import { userSettings as defaultUserSettings } from '../../../constants/defaultValues';
+
 const useStyles = makeStyles((theme) => ({
-    card: {
-        margin: '1rem',
+    root: {
+    },
+    paper: {
         padding: '1rem',
-        '&> *': {
-            margin: '1rem 0'
-        }
+        margin: '1rem auto',
+        maxWidth: '700px'
+    },
+    setting: {
+        margin: '1rem auto'
     }
 }));
 
@@ -30,31 +30,60 @@ export default function UserSettings() {
     const classes = useStyles();
     const dispatch = useDispatch();
     const { settings, isFetching: isUserLoading, isError: isUserError } = useSelector(userSelector);
-    const journalSettings = (Object.values(settings).length && settings) || defaultJournalSettings;
-    const [journalInstructions, setJournalInstructions] = useState(journalSettings.journalInstructions);
-    const editor = useEditor({
+    console.log('%c 🍎 settings: ', 'font-size:20px;background-color: #42b983;color:#fff;', settings);
+    const userSettings = (Object.entries(settings) && Object.entries(settings).length && settings) || defaultUserSettings;
+    console.log('%c 🍖 userSettings: ', 'font-size:20px;background-color: #EA7E5C;color:#fff;', userSettings);
+    const [journalInstructions, setJournalInstructions] = useState(userSettings.journalSettings.journalInstructions);
+    const journalEntryEditor = useEditor({
         extensions: [
             StarterKit,
         ],
         editorProps: {
             attributes: {
-                class: 'journalContainer'
+                class: 'textEditorContainer'
+            }
+        }
+    });
+    const choreTemplateEditor = useEditor({
+        extensions: [
+            StarterKit,
+        ],
+        editorProps: {
+            attributes: {
+                class: 'textEditorContainer'
             }
         }
     });
 
     useEffect(() => {
-        if(editor && !editor.isDestroyed){
-            editor.commands.setContent(journalSettings.journalTemplate);
+        if (journalEntryEditor && !journalEntryEditor.isDestroyed) {
+            journalEntryEditor.commands.setContent(userSettings.journalSettings.journalTemplate);
         }
-    }, [journalSettings, editor]);
+    }, [journalEntryEditor, userSettings]);
 
-    const handleSave = function() {
+    useEffect(() => {
+        if (choreTemplateEditor && !choreTemplateEditor.isDestroyed) {
+            choreTemplateEditor.commands.setContent(userSettings.choreSettings.choreTemplate);
+        }
+    }, [choreTemplateEditor, userSettings]);
+
+    const handleJournalSave = function () {
         dispatch(updateUserSettings({
-            journalTemplate: editor.getHTML(),
-            journalInstructions: journalInstructions
+            ...userSettings,
+            journalSettings: {
+                journalTemplate: journalEntryEditor.getHTML(),
+                journalInstructions: journalInstructions
+            }
         }));
+    };
 
+    const handleChoreSave = function () {
+        dispatch(updateUserSettings({
+            ...userSettings,
+            choreSettings: {
+                choreTemplate: choreTemplateEditor.getHTML(),
+            }
+        }));
     };
 
     if (isUserLoading) {
@@ -66,37 +95,42 @@ export default function UserSettings() {
     }
 
     return (
-        <MuiPickersUtilsProvider utils={DateFnsUtils}>
-            <Typography variant="h4" id="settingsTitle" component="h1">
-                Customizations
-            </Typography>
-            <Card elevation={3}>
-                <CardContent>
-                    <form className={classes.card} noValidate autoComplete="off">
-                        <Typography variant="h5" id="settingsTitle" component="h2">
-                            Journal Settings
-                        </Typography>
-                        <TextField
-                            fullWidth
-                            id="journal-instructions"
-                            label="Journal Instructions"
-                            multiline
-                            onChange={(evt) => setJournalInstructions(evt.target.value)}
-                            value={journalInstructions}
-                            variant="outlined"
-                        />
-                        <InputLabel htmlFor="journal-entry-template">Journal Entry Template</InputLabel>
-                        <EditorContent id="journal-entry-template" className={classes.entryContainer} editor={editor} />
-                    </form>
-                </CardContent>
-                <CardActions className={classes.root}>
-                    <Button size="small" onClick={handleSave}>
+        <div className={classes.root}>
+            <h1 className="visuallyHidden">Customizations</h1>
+            <Paper
+                className={classes.paper}
+                elevation={3}
+            >
+                <Typography variant="h5" id="journalSettingTypography" component="h2">
+                    Journal Settings
+                    <IconButton size="small" onClick={handleJournalSave}>
                         <SaveIcon />
-                        Save
-                    </Button>
-                </CardActions>
-            </Card>
-        </MuiPickersUtilsProvider>
+                    </IconButton>
+                </Typography>
+                <TextField
+                    className={classes.setting}
+                    fullWidth
+                    id="journal-instructions"
+                    label="Journal Instructions"
+                    multiline
+                    onChange={(evt) => setJournalInstructions(evt.target.value)}
+                    value={journalInstructions}
+                    variant="outlined"
+                />
+                <InputLabel htmlFor="journal-entry-template">Journal Entry Template</InputLabel>
+                <EditorContent id="journal-entry-template" className={classes.entryContainer} editor={journalEntryEditor} />
+            </Paper>
+            <Paper className={classes.paper} elevation={3}>
+                <Typography variant="h5" id="choreSettingTypography" component="h2">
+                    Chore Settings
+                    <IconButton size="small" onClick={handleChoreSave}>
+                        <SaveIcon />
+                    </IconButton>
+                </Typography>
+                <InputLabel className={classes.setting} htmlFor="chore-entry-template">Chore Entry Template</InputLabel>
+                <EditorContent id="chore-entry-template" className={classes.entryContainer} editor={choreTemplateEditor} />
+            </Paper>
+        </div>
     );
 }
 

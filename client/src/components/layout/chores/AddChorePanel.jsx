@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { userSelector } from '../../../slices/userApiSlice';
 import { useAddChoreMutation } from '../../../slices/choresApiSlice';
 import { useGetTagsQuery } from '../../../slices/tagsApiSlice';
 import Button from '@material-ui/core/Button';
@@ -27,6 +29,7 @@ import { getFrequencySubTypeOptions } from '../../frequency/utilities';
 
 export default function AddChorePanel() {
     const { data: tags, error: errorTags, isLoading: isLoadingTags } = useGetTagsQuery();
+    const { settings } = useSelector(userSelector);
     const [addChore, { isLoading, isError, isSuccess }] = useAddChoreMutation();
     const classes = useStyles();
     const [name, setName] = useState('');
@@ -46,7 +49,7 @@ export default function AddChorePanel() {
         ],
         editorProps: {
             attributes: {
-                class: 'journalContainer'
+                class: 'textEditorContainer'
             }
         },
         content: `
@@ -57,9 +60,9 @@ export default function AddChorePanel() {
 
     useEffect(()=> {
         if (editor && !editor.isDestroyed) {
-            editor.commands.setContent(defaultDescription);
+            editor.commands.setContent(settings?.choreSettings?.choreTemplate || defaultDescription);
         }
-    }, [editor]);
+    }, [settings, editor]);
 
     const handleFrequencyAmountChange = (evt) => {
         setFrequencyAmount(evt.target.value < 1 ? 1 : evt.target.value);

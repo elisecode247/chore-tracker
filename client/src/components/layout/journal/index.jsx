@@ -36,7 +36,7 @@ export default function Journal() {
     const [addJournalEntry, { isLoading: isJournalEntrySubmitLoading }] = useAddJournalEntryMutation();
     const [updateJournalEntry, { isLoading: isJournalEntryUpdateLoading }] = useUpdateJournalEntryMutation();
     const { settings } = useSelector(userSelector);
-    const journalSettings = (Object.values(settings).length && settings) || defaultJournalSettings;
+    const journalSettings = (Object.values(settings).length && settings && settings.journalSettings) || defaultJournalSettings;
     const [view, setView] = useState(localStorage.getItem('journalView') === 'true');
 
     const editor = useEditor({
@@ -45,7 +45,7 @@ export default function Journal() {
         ],
         editorProps: {
             attributes: {
-                class: 'journalContainer'
+                class: 'textEditorContainer'
             }
         }
     });

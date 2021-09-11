@@ -67,7 +67,7 @@ export default function Row({ chore, tags }) {
         ],
         editorProps: {
             attributes: {
-                class: 'journalContainer'
+                class: 'textEditorContainer'
             }
         },
         content: chore.description
@@ -260,7 +260,7 @@ export default function Row({ chore, tags }) {
                             renderValue={(selectedTagUuids) => (
                                 <div className={classes.chips}>
                                     {
-                                        selectedTagUuids.map((tag) => {
+                                        tags && tags.length && selectedTagUuids.map((tag) => {
                                             const selectedTag = tags.find(t => t.uuid === tag);
                                             if (!selectedTag) {
                                                 return <></>;

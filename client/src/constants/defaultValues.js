@@ -22,3 +22,10 @@ export const defaultJournalSettings = {
         'A list of things that make you happy.',
     journalTemplate: ''
 };
+
+export const userSettings = {
+    journalSettings: defaultJournalSettings,
+    choreSettings: {
+        choreTemplate: defaultDescription
+    }
+};
