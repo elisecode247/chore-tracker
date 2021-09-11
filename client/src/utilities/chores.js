@@ -256,6 +256,7 @@ export function formatChores(chores) {
                     formattedDueDate,
                     scheduledAt: chore.scheduled_at,
                     hasTime: !!(chore.has_time),
+                    parsedFrequency,
                     formattedFrequency: formatFrequency(chore),
                     reason: chore.reason || '',
                     description: chore.description || '',

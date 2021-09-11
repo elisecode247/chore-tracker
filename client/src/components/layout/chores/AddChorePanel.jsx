@@ -23,6 +23,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import TipTapMenu from '../../TipTapMenu';
 import { addChorePanelStyles as useStyles } from './styles';
+import { getFrequencySubTypeOptions } from '../../frequency/utilities';
 
 export default function AddChorePanel() {
     const { data: tags, error: errorTags, isLoading: isLoadingTags } = useGetTagsQuery();
@@ -267,34 +268,4 @@ export default function AddChorePanel() {
             </form>
         </div>
     );
-}
-
-function getFrequencySubTypeOptions(frequencyType) {
-    switch (frequencyType) {
-    case 'day':
-        return [
-            { label: 'Multiple times per day', value: 'multiple' },
-            { label: 'Once per day', value: 'once' },
-        ];
-    case 'week':
-        return [
-            { label: 'S', value: 0 },
-            { label: 'M', value: 1 },
-            { label: 'T', value: 2 },
-            { label: 'W', value: 3 },
-            { label: 'Th', value: 4 },
-            { label: 'F', value: 5 },
-            { label: 'S', value: 6 },
-        ];
-    case 'month':
-        return [
-            { label: 'first day of the month', value: 'first' },
-            { label: 'last day of the month', value: 'last' },
-            { label: 'day', value: 'day' },
-        ];
-    case 'year':
-        return [];
-    default:
-        return [];
-    }
 }

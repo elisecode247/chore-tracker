@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useGetTagsQuery } from '../../../slices/tagsApiSlice';
 import { useGetChoresQuery } from '../../../slices/choresApiSlice';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -16,6 +17,7 @@ import ChoresListTagFilterHead from './ChoresListTagFilterHead';
 
 export default function ChoresList() {
     const classes = useStyles();
+    const { data: tags } = useGetTagsQuery();
     const { data: chores, error, isLoading } = useGetChoresQuery();
     const formattedChores = Object.values(formatChores(chores));
     const [selectedTags, setSelectedTags] = useState((
@@ -41,7 +43,6 @@ export default function ChoresList() {
                 <Table aria-label="collapsible table">
                     <TableHead>
                         <TableRow>
-                            <TableCell />
                             <TableCell>Active</TableCell>
                             <TableCell>Name</TableCell>
                             <TableCell>When</TableCell>
@@ -49,22 +50,24 @@ export default function ChoresList() {
                             <TableCell></TableCell>
                         </TableRow>
                     </TableHead>
-                    <TableBody>{formattedChores.filter(row => {
-                        let matchesAllTags = true;
-                        if (selectedTags.length) {
-                            if(!row.tags.length) {
-                                matchesAllTags = false;
-                            } else {
-                                const itemTags = row.tags.map(t => t.uuid);
-                                selectedTags.forEach(t => {
-                                    if (!itemTags.includes(t)) {
-                                        matchesAllTags = false;
-                                    }
-                                });
+                    <TableBody>
+                        {formattedChores.filter(row => {
+                            let matchesAllTags = true;
+                            if (selectedTags.length) {
+                                if(!row.tags.length) {
+                                    matchesAllTags = false;
+                                } else {
+                                    const itemTags = row.tags.map(t => t.uuid);
+                                    selectedTags.forEach(t => {
+                                        if (!itemTags.includes(t)) {
+                                            matchesAllTags = false;
+                                        }
+                                    });
+                                }
                             }
-                        }
-                        return matchesAllTags;
-                    }).map((chore, idx)=>(<ChoreListRow key={idx} chore={chore} />))}</TableBody>
+                            return matchesAllTags;
+                        }).map((chore, idx)=>(<ChoreListRow key={idx} chore={chore} tags={tags} />))}
+                    </TableBody>
                 </Table>
             </TableContainer>
         </div>

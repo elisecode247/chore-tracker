@@ -74,6 +74,9 @@ export const choresListRowStyles = makeStyles({
         border: '1px solid darkgrey',
         margin: 'auto -1rem',
         padding: '1rem',
+    },
+    tagSelect: {
+        minWidth: '120px'
     }
 });
 

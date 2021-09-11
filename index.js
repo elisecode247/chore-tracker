@@ -182,6 +182,7 @@ app.put('/api/v1/chores', verifyToken, async (req, res) => {
         const params = Object.entries(req.body).reduce((acc, param)=> {
             const [paramName, paramValue] = param;
             if (paramName === 'uuid') return acc;
+            if (paramName === 'selectedTags') return acc;
             console.log('%c 🍓 paramName: ', 'font-size:20px;background-color: #B03734;color:#fff;', paramName);
             console.log('%c 🥤 typeof paramValue: ', 'font-size:20px;background-color: #6EC1C2;color:#fff;', typeof paramValue);
             if ((typeof paramValue !== 'boolean' && !paramValue)) return acc;
@@ -196,15 +197,24 @@ app.put('/api/v1/chores', verifyToken, async (req, res) => {
             ];
         }, []);
         const queryString = `
-            UPDATE "chore"
-            SET
-                ${params.map(p => ` ${p.paramName} = ${p.paramKey} `).join(', ')}
-            WHERE uuid = $${params.length + 1}
+            WITH ins1 AS (
+                UPDATE chore as c
+                SET
+                    ${params.map(p => `${p.paramName} = ${p.paramKey}`).join(', ')}
+                WHERE c.uuid = $${params.length + 1}
+                RETURNING id as chore_id
+            ), ins2 AS (
+                SELECT tag.id as tag_id FROM tag WHERE uuid = ANY($${params.length + 2}::uuid[])
+            ), ins3 AS (
+                DELETE FROM chore_tag USING ins1 WHERE chore_tag.chore_id = ins1.chore_id
+            )
+            INSERT INTO chore_tag (chore_id, tag_id)
+            SELECT chore_id, tag_id
+            FROM ins1, ins2
+            ON CONFLICT(chore_id, tag_id) DO NOTHING
         `;
-        console.log('%c 🍥 queryString: ', 'font-size:20px;background-color: #6EC1C2;color:#fff;', queryString);
-        console.log('%c 🍿 [...Object.values(params).map(p => p.paramValue), req.body.uuid]: ', 'font-size:20px;background-color: #ED9EC7;color:#fff;', JSON.stringify([...Object.values(params).map(p => p.paramValue), req.body.uuid]));
-        await database.query(queryString, [...Object.values(params).map(p => p.paramValue), req.body.uuid]);
-        
+        await database.query(queryString, [...Object.values(params).map(p => p.paramValue), req.body.uuid, req.body.selectedTags]);
+
         res.send({ success: true });
     } catch (err) {
         res.send({ success: false, error: err });

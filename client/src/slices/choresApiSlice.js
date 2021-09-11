@@ -75,8 +75,8 @@ export const choresApi = createApi({
                     description,
                     reason,
                     location,
-                    scheduledAt,
-                    hasTime,
+                    scheduled_at: scheduledAt,
+                    has_time: hasTime,
                     frequency: frequencyAmount ? JSON.stringify({
                         repeatType: isFrequencyChecked ? frequencyType : 'once',
                         repeatAmount: frequencyAmount || 0,
@@ -99,7 +99,7 @@ export const choresApi = createApi({
                 },
             }),
             invalidatesTags: ['chores']
-        }) 
+        })
     })
 });
 
