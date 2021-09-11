@@ -30,9 +30,7 @@ export default function UserSettings() {
     const classes = useStyles();
     const dispatch = useDispatch();
     const { settings, isFetching: isUserLoading, isError: isUserError } = useSelector(userSelector);
-    console.log('%c 🍎 settings: ', 'font-size:20px;background-color: #42b983;color:#fff;', settings);
     const userSettings = (Object.entries(settings) && Object.entries(settings).length && settings) || defaultUserSettings;
-    console.log('%c 🍖 userSettings: ', 'font-size:20px;background-color: #EA7E5C;color:#fff;', userSettings);
     const [journalInstructions, setJournalInstructions] = useState(userSettings.journalSettings.journalInstructions);
     const journalEntryEditor = useEditor({
         extensions: [

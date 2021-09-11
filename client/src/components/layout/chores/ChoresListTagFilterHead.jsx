@@ -30,7 +30,7 @@ export default function ChoresListTagFilterHead({ selectedTags, setSelectedTags 
 
     if (!view) {
         return (
-            <div className={`${classes.root} ${classes.inline}`}>
+            <div className={`${classes.root}`}>
                 <h3 className={`${classes.inline} ${classes.fontColor}`}>Category Filter</h3>
                 <Tooltip title="Toggle View">
                     <IconButton className={classes.fontColor} onClick={handleViewChange}><VisibilityOffIcon /></IconButton>

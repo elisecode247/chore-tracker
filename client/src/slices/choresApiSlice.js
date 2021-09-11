@@ -45,6 +45,7 @@ export const choresApi = createApi({
                 validateStatus: (response, result) => {
                     if(!result.success) {
                         console.error(result);
+                        return false;
                     }
                     return response.status === 200 && result.success;
                 }
@@ -64,7 +65,7 @@ export const choresApi = createApi({
                 frequencyAmount = 0,
                 frequencyType = '',
                 frequencySubtype = '',
-                selectedTags = []
+                selectedTags = null
             }) => ({
                 url: 'chores',
                 method: 'PUT',
@@ -82,8 +83,15 @@ export const choresApi = createApi({
                         repeatAmount: frequencyAmount || 0,
                         repeatSubtype: frequencySubtype || ''
                     }) : null,
-                    ...(selectedTags.length ? { selectedTags } : {})
+                    ...(selectedTags ? { selectedTags: selectedTags.map(t => t.uuid) } : {})
                 },
+                validateStatus: (response, result) => {
+                    if(!result.success) {
+                        console.error(result);
+                        return false;
+                    }
+                    return response.status === 200 && result.success;
+                }
             }),
             invalidatesTags: ['chores']
         }),

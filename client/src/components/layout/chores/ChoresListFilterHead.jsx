@@ -23,7 +23,7 @@ export default function ChoresListFilterHead({ filters }) {
 
     if (!view) {
         return (
-            <div className={`${classes.root} ${classes.inline}`}>
+            <div className={`${classes.root}`}>
                 <h3 className={classes.inline}>Filters</h3>
                 <Tooltip title="Toggle View"><IconButton onClick={handleViewChange}><VisibilityOffIcon /></IconButton></Tooltip>
             </div>

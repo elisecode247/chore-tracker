@@ -39,6 +39,9 @@ export const choresListStyles = makeStyles((theme) => ({
     root: {
         flexGrow: 1,
     },
+    borderRight: {
+        borderRight: '1px solid grey'
+    },
     appBar: {
         color: 'white'
     },
@@ -55,6 +58,23 @@ export const choresListRowStyles = makeStyles({
         '& > *': {
             borderBottom: 'unset',
         },
+    },
+    inline: {
+        display: 'inline'
+    },
+    tableCell: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderRight: '1px solid grey'
+    },
+    tableContents: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+    },
+    borderRight: {
+        borderRight: '1px solid grey'
     },
     editButton: {
         color: styles.accentTwo,

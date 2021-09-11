@@ -43,10 +43,10 @@ export default function ChoresList() {
                 <Table aria-label="collapsible table">
                     <TableHead>
                         <TableRow>
-                            <TableCell>Active</TableCell>
-                            <TableCell>Name</TableCell>
-                            <TableCell>When</TableCell>
-                            <TableCell>Categories</TableCell>
+                            <TableCell className={classes.borderRight}>Active</TableCell>
+                            <TableCell className={classes.borderRight}>Name</TableCell>
+                            <TableCell className={classes.borderRight}>When</TableCell>
+                            <TableCell className={classes.borderRight}>Categories</TableCell>
                             <TableCell></TableCell>
                         </TableRow>
                     </TableHead>

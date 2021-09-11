@@ -194,7 +194,22 @@ app.put('/api/v1/chores', verifyToken, async (req, res) => {
                 }
             ];
         }, []);
-        const queryString = `
+        const queryString = req.body.selectedTags && !req.body.selectedTags.length ? `
+            WITH ins1 AS (
+                UPDATE chore as c
+                SET
+                    ${params.map(p => `${p.paramName} = ${p.paramKey}`).join(', ')}
+                WHERE c.uuid = $${params.length + 1}
+                RETURNING id as chore_id
+            )
+            DELETE FROM chore_tag USING ins1 WHERE chore_tag.chore_id = ins1.chore_id
+        ` : !req.body.selectedTags ? `
+            UPDATE chore as c
+                SET
+                    ${params.map(p => `${p.paramName} = ${p.paramKey}`).join(', ')}
+                WHERE c.uuid = $${params.length + 1}
+                RETURNING id as chore_id
+        ` : `
             WITH ins1 AS (
                 UPDATE chore as c
                 SET
@@ -211,7 +226,13 @@ app.put('/api/v1/chores', verifyToken, async (req, res) => {
             FROM ins1, ins2
             ON CONFLICT(chore_id, tag_id) DO NOTHING
         `;
-        await database.query(queryString, [...Object.values(params).map(p => p.paramValue), req.body.uuid, req.body.selectedTags]);
+        
+        const values = [
+            ...Object.values(params).map(p => p.paramValue),
+            req.body.uuid,
+            ...(req.body.selectedTags && req.body.selectedTags.length ? [ req.body.selectedTags ] : [])
+        ];
+        await database.query(queryString, values);
 
         res.send({ success: true });
     } catch (err) {

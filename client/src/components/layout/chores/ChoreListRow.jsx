@@ -15,6 +15,7 @@ import Chip from '@material-ui/core/Chip';
 import { choresListRowStyles as useStyles } from './styles.js';
 import { DATE_FORMAT } from '../../../constants/dateTimeFormats';
 import { useEditor, EditorContent } from '@tiptap/react';
+import TipTapMenu from '../../TipTapMenu';
 import StarterKit from '@tiptap/starter-kit';
 import { useUpdateChoreMutation } from '../../../slices/choresApiSlice';
 import VisibilityIcon from '@material-ui/icons/Visibility';
@@ -23,42 +24,28 @@ import TextField from '@material-ui/core/TextField';
 import CancelIcon from '@material-ui/icons/Cancel';
 import SaveIcon from '@material-ui/icons/Save';
 import FormControl from '@material-ui/core/FormControl';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Checkbox from '@material-ui/core/Checkbox';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
-import formatScheduledAt from '../../../utilities/formatScheduledAt';
-import { getFrequencySubTypeOptions, formatFrequency } from '../../frequency/utilities';
-import {
-    KeyboardTimePicker,
-    KeyboardDatePicker
-} from '@material-ui/pickers';
+import FrequencyCell from './FrequencyCell';
 
 export default function Row({ chore, tags }) {
     const [updateChore, { isLoading: isUpdateChoreLoading }] = useUpdateChoreMutation();
     const [open, setOpen] = useState(false);
-    const [editTopRow, setEditTopRow] = useState(false);
+    const [editName, setEditName] = useState(false);
+    const [editTags, setEditTags] = useState(false);
     const [name, setName] = useState(chore.name);
     // const [location, setLocation] = useState('');
     // const [reason, setReason] = useState('');
-    const [scheduledDate, setScheduledDate] = useState(new Date(chore.scheduledAt) || new Date());
-    const [scheduledTime, setScheduledTime] = useState(chore.hasTime ? new Date(chore.scheduledAt) : null);
-    const [isFrequencyChecked, toggleFrequencyChecked] = useState(chore.parsedFrequency?.repeatType !== 'once' || false);
-    const [frequencyAmount, setFrequencyAmount] = useState(chore.parsedFrequency?.repeatAmount || 1);
-    const [frequencyType, setFrequencyType] = useState(chore.parsedFrequency?.repeatType || 'day');
-    const [frequencySubtype, setFrequencySubtype] = useState(chore.parsedFrequency?.repeatSubtype || '');
-    const [frequencySubTypes, setFrequencySubtypes] = useState(getFrequencySubTypeOptions(chore.parsedFrequency?.repeatType));
     const [selectedTagUuids, setSelectedTags] = useState(chore.tags.map(t => t.uuid) || []);
     const selectedTags = selectedTagUuids.reduce((acc, uuid) => {
-        const selectedTag = tags.find(t => t.uuid === uuid);
+        const selectedTag = tags && tags.length && tags.find(t => t.uuid === uuid);
         if (!selectedTag) {
             return acc;
         }
         return [ ...acc, selectedTag ];
     }, []);
-    const formattedFrequency = formatFrequency({ hasTime: chore.has_time, scheduledAt: new Date(chore.scheduledAt), frequencyAmount, frequencyType, frequencySubtype });
     const classes = useStyles();
     const wrapper = createRef();
     const editor = useEditor({
@@ -79,54 +66,31 @@ export default function Row({ chore, tags }) {
         }
     }, [chore.description, editor]);
 
-    const handleFrequencyAmountChange = (evt) => {
-        setFrequencyAmount(evt.target.value < 1 ? 1 : evt.target.value);
-    };
-
-    const handleFrequencyTypeChange = (evt) => {
-        const frequencySubTypes = getFrequencySubTypeOptions(evt.target.value);
-        setFrequencyType(evt.target.value);
-        if(evt.target.value === 'week') {
-            setFrequencySubtype([]);
-        } else {
-            setFrequencySubtype(frequencySubTypes.length ? frequencySubTypes[0].value : '');
-        }
-        setFrequencySubtypes(frequencySubTypes);
-    };
-
-    const handleSubtypeWeekChange = (event) => {
-        const daysOfWeek = event.target.checked ? [...frequencySubtype, event.target.name] :
-            frequencySubtype.filter(name => (event.target.name !== name));
-        setFrequencySubtype(daysOfWeek);
-    };
-
-    const handleFrequencySubtypeChange = (evt) => {
-        setFrequencySubtype(evt.target.value);
-    };
-
-    const handleFrequencyCheck = () => {
-        toggleFrequencyChecked(!isFrequencyChecked);
-    };
-
     const handleSelectedTagsChange = (event) => {
         const { value } = event.target;
         setSelectedTags(value);
     };
 
-    const handleTopRowSubmit = () => {
-        const hasTime = !!scheduledTime;
-        const scheduledAt = formatScheduledAt(scheduledDate, scheduledTime);
-
+    const handleSelectedTagsSaveClick = () => {
         updateChore({
-            name,
-            scheduledAt,
-            hasTime,
-            isFrequencyChecked,
-            frequencyAmount,
-            frequencyType,
-            frequencySubtype,
             selectedTags,
             uuid: chore.uuid
+        });
+        setEditTags(!editTags);
+    };
+
+    const handleNameSaveClick = () => {
+        updateChore({
+            uuid: chore.uuid,
+            name
+        });
+        setEditName(!editName);
+    };
+
+    const handleDescriptionSaveClick = () => {
+        updateChore({
+            uuid: chore.uuid,
+            description: editor.getHTML()
         });
     };
 
@@ -135,169 +99,93 @@ export default function Row({ chore, tags }) {
     }
     return [
         <TableRow key={0} className={classes.root}>
-            <TableCell>
+            <TableCell className={classes.borderRight}>
                 <Switch
                     aria-label="enable switch"
                     checked={chore.enabled}
                     onChange={() => updateChore({ uuid: chore.uuid, enabled: !chore.enabled })}
                 />
             </TableCell>
-            <TableCell>
-                {!editTopRow ? name : (
-                    <TextField label="Name" id={`chore-name-input-${chore.uuid}`} onChange={evt => setName(evt.target.value)} value={name} />
-                )}
+            <TableCell className={classes.borderRight}>
+                <div className={classes.tableContents}>
+                    {!editName ? (
+                        <>
+                            <span>{name}</span>
+                            <IconButton onClick={() => setEditName(!editName)}><EditIcon /></IconButton>
+                        </>
+                    ) : (
+                        <>
+                            <TextField label="Name" id={`chore-name-input-${chore.uuid}`} onChange={evt => setName(evt.target.value)} value={name} />
+                            <div>
+                                <IconButton onClick={() => setEditName(!editName)}><CancelIcon /></IconButton>
+                                <IconButton onClick={handleNameSaveClick}><SaveIcon /></IconButton>
+                            </div>
+                        </>
+                    )}
+                </div>
             </TableCell>
-            <TableCell>
-                {!editTopRow ? formattedFrequency : (
-                    <>
-                        <FormControl className={`${classes.formControl} ${classes.inlineBlock}`} >
-                            <KeyboardDatePicker
-                                disableToolbar
-                                variant="inline"
-                                format="MM/dd/yyyy"
-                                margin="normal"
-                                id="scheduled-chore-date-local"
-                                label="Starting Date"
-                                value={scheduledDate}
-                                onChange={setScheduledDate}
-                                KeyboardButtonProps={{
-                                    'aria-label': 'change date',
-                                }}
-                            />
+            <FrequencyCell chore={chore} />
+            <TableCell className={classes.borderRight}>
+                {!editTags ? (
+                    <div
+                        className={classes.tableContents}
+                        style={!selectedTags.length ? { justifyContent: 'flex-end' } : {}}
+                    >
+                        <div>
+                            {selectedTags.map((tag, idx) => (
+                                <Chip key={idx} label={tag.name} style={{ marginRight: '0.5rem' }} variant="outlined" />
+                            ))}
+                        </div>
+                        <IconButton onClick={() => setEditTags(!editTags)}><EditIcon /></IconButton>
+                    </div>
+                ) : (
+                    <div className={classes.tableContents}>
+                        <FormControl>
+                            <InputLabel id="multiple-tags">Categories</InputLabel>
+                            <Select
+                                className={classes.tagSelect}
+                                labelId="multiple-tags"
+                                id={`multiple-tags-select-${chore.uuid}`}
+                                multiple
+                                value={selectedTagUuids}
+                                onChange={handleSelectedTagsChange}
+                                input={<Input id="select-tag-input" />}
+                                renderValue={(selectedTagUuids) => (
+                                    <div className={classes.chips}>
+                                        {
+                                            tags && tags.length && selectedTagUuids.map((tag) => {
+                                                const selectedTag = tags.find(t => t.uuid === tag);
+                                                if (!selectedTag) {
+                                                    return <></>;
+                                                }
+                                                return (
+                                                    <Chip key={selectedTag.uuid} label={selectedTag.name} className={classes.chip} />
+                                                );
+                                            })
+                                        }
+                                    </div>
+                                )}
+                            >
+                                {tags.map((tag, index) => {
+                                    return (
+                                        <MenuItem key={index} value={tag.uuid}>
+                                            {tag.name}
+                                        </MenuItem>
+                                    );
+                                })}
+                            </Select>
                         </FormControl>
-                        <FormControl className={`${classes.formControl} ${classes.inlineBlock}`} >
-                            <KeyboardTimePicker
-                                margin="normal"
-                                id="scheduled-chore-time-local"
-                                label="Starting Time"
-                                value={scheduledTime}
-                                onChange={setScheduledTime}
-                                KeyboardButtonProps={{
-                                    'aria-label': 'change time',
-                                }}
-                                variant="inline"
-                            />
-                        </FormControl>
-                        <FormControl className={classes.formControl}>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={isFrequencyChecked}
-                                        onChange={handleFrequencyCheck}
-                                        name="checkedFrequency"
-                                        color="primary"
-                                    />
-                                }
-                                label="Repeat"
-                            />
-                        </FormControl>
-                        {isFrequencyChecked ? (
-                            <>
-                                <TextField
-                                    label="Every"
-                                    type="number"
-                                    onChange={handleFrequencyAmountChange}
-                                    value={frequencyAmount}
-                                />
-                                <Select
-                                    labelId="frequency-type-select-label"
-                                    id="demo-simple-select"
-                                    value={frequencyType}
-                                    onChange={handleFrequencyTypeChange}
-                                >
-                                    <MenuItem value='day'>days</MenuItem>
-                                    <MenuItem value='week'>weeks</MenuItem>
-                                    <MenuItem value='month'>months</MenuItem>
-                                    <MenuItem value='year'>years</MenuItem>
-                                </Select>
-                                {frequencySubTypes.length ? (frequencyType === 'week' ? (
-                                    <>
-                                        <div className={classes.and}> and </div>
-                                        {frequencySubTypes.map((subtype, idx) => {
-                                            return (
-                                                <FormControlLabel
-                                                    key={idx}
-                                                    control={<Checkbox name={subtype.value} />}
-                                                    label={subtype.label}
-                                                    onChange={handleSubtypeWeekChange}
-                                                />
-                                            );
-                                        })}
-                                    </>
-                                ) : (frequencySubTypes.length ? (
-                                    <>
-                                        <span className={classes.and}> and </span>
-                                        <InputLabel className={classes.tagLabel} id="frequency-subtype-select-label">On</InputLabel>
-                                        <Select
-                                            labelId="frequency-subtype-select-label"
-                                            id="frequency-subtype-select"
-                                            value={frequencySubtype}
-                                            onChange={handleFrequencySubtypeChange}
-                                        >
-                                            {frequencySubTypes.map((subtype, idx) => {
-                                                return (<MenuItem key={idx} value={subtype.value}>{subtype.label}</MenuItem>);
-                                            })}
-                                        </Select>
-                                    </>
-                                ) : null)) : null}
-                            </>
-                        ) : null}
-                    </>
-                )}
-            </TableCell>
-            <TableCell>
-                {!editTopRow ? selectedTags.map((tag, idx) => (<Chip key={idx} label={tag.name} variant="outlined" />)) : (
-                    <FormControl>
-                        <InputLabel id="multiple-tags">Categories</InputLabel>
-                        <Select
-                            className={classes.tagSelect}
-                            labelId="multiple-tags"
-                            id={`multiple-tags-select-${chore.uuid}`}
-                            multiple
-                            value={selectedTagUuids}
-                            onChange={handleSelectedTagsChange}
-                            input={<Input id="select-tag-input" />}
-                            renderValue={(selectedTagUuids) => (
-                                <div className={classes.chips}>
-                                    {
-                                        tags && tags.length && selectedTagUuids.map((tag) => {
-                                            const selectedTag = tags.find(t => t.uuid === tag);
-                                            if (!selectedTag) {
-                                                return <></>;
-                                            }
-                                            return (
-                                                <Chip key={selectedTag.uuid} label={selectedTag.name} className={classes.chip} />
-                                            );
-                                        })
-                                    }
-                                </div>
-                            )}
-                        >
-                            {tags.map((tag, index) => {
-                                return (
-                                    <MenuItem key={index} value={tag.uuid}>
-                                        {tag.name}
-                                    </MenuItem>
-                                );
-                            })}
-                        </Select>
-                    </FormControl>
+                        <div>
+                            <IconButton onClick={() => setEditTags(!editTags)}><CancelIcon /></IconButton>
+                            <IconButton onClick={handleSelectedTagsSaveClick}><SaveIcon /></IconButton>
+                        </div>
+                    </div>
                 )}
             </TableCell>
             <TableCell align="right">
                 <IconButton aria-label="expand chore" size="small" onClick={() => setOpen(!open)}>
                     {open ? <VisibilityIcon /> : <VisibilityOffIcon />}
                 </IconButton>
-                {!editTopRow ? (
-                    <IconButton aria-label="expand chore" size="small" onClick={() => setEditTopRow(!editTopRow)}>
-                        <EditIcon />
-                    </IconButton>
-                ) : (
-                    <>
-                        <IconButton onClick={() => setEditTopRow(!editTopRow)}><CancelIcon /></IconButton>
-                        <IconButton onClick={handleTopRowSubmit}><SaveIcon /></IconButton>
-                    </>
-                )}
             </TableCell>
         </TableRow>,
         <TableRow key={1} >
@@ -306,10 +194,10 @@ export default function Row({ chore, tags }) {
                     <Box margin={0} className={classes.historyContainer}>
                         <Typography variant="h6" gutterBottom component="span">
                             Directions
+                            <IconButton onClick={handleDescriptionSaveClick}><SaveIcon /></IconButton>
                         </Typography>
-                        {!chore.description ? <p>--</p> : (
-                            <EditorContent className={classes.entryContainer} editor={editor} id={`chore-description-${chore.uuid}`} />
-                        )}
+                        <EditorContent className={classes.entryContainer} editor={editor} id={`chore-description-${chore.uuid}`} />
+                        <TipTapMenu editor={editor} />
                         <Typography variant="h6" gutterBottom component="span">
                             Why it's Important
                         </Typography>
