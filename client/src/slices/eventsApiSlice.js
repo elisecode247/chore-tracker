@@ -35,6 +35,22 @@ export const eventsApi = createApi({
             invalidatesTags: ['events']
 
         }),
+        deleteEvent: builder.mutation({
+            query: ({ uuid }) => ({
+                url: 'events',
+                method: 'DELETE',
+                body: { uuid },
+                validateStatus: (response, result) => {
+                    if(!result.success) {
+                        console.error(result);
+                        return false;
+                    }
+                    return response.status === 200 && result.success;
+                }
+            }),
+            invalidatesTags: ['events']
+
+        }),
         updateEvent: builder.mutation({
             query: ({
                 uuid,
@@ -63,6 +79,7 @@ export const eventsApi = createApi({
 
 export const {
     useAddEventMutation,
+    useDeleteEventMutation,
     useUpdateEventMutation,
     useGetDoneEventsQuery,
     useGetTodayEventsQuery,

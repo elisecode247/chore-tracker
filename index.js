@@ -383,6 +383,20 @@ app.post('/api/v1/events', verifyToken, async (req, res) => {
     }
 });
 
+app.delete('/api/v1/events', verifyToken, async (req, res) => {
+    try {
+        const queryString = `
+            DELETE FROM "event"
+            WHERE uuid = $1
+        `;
+        await database.query(queryString, [req.body.uuid]);
+        res.send({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.send({ success: false, error: err });
+    }
+});
+
 app.get('/api/v1/tags', verifyToken, async (req, res) => {
     try {
         const queryString = 'SELECT uuid, name, description FROM tag as t WHERE user_id = $1';

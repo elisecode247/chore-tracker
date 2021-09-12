@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import VisibilityIcon from '@material-ui/icons/Visibility';
 import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
@@ -8,7 +9,7 @@ import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableContainer from '@material-ui/core/TableContainer';
 import { useGetChoresQuery } from '../../../slices/choresApiSlice';
-import { useGetTodayEventsQuery } from '../../../slices/eventsApiSlice';
+import { useGetTodayEventsQuery, useDeleteEventMutation } from '../../../slices/eventsApiSlice';
 import { formatChores, formatEvents } from '../../../utilities/chores';
 import { stableSort } from './utilities';
 import ToDoListHead from './ToDoListHead';
@@ -21,6 +22,10 @@ import ToDoListFilterHead from './ToDoListFilterHead';
 import ToDoListSortHead from './ToDoListSortHead';
 import { useSelector } from 'react-redux';
 import Typography from '@material-ui/core/Typography';
+import Dialog from '@material-ui/core/Dialog';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogActions from '@material-ui/core/DialogActions';
 
 export default function ToDoList() {
     const desktop = useMediaQuery('(min-width:650px)');
@@ -34,6 +39,8 @@ export default function ToDoList() {
     const [orderBy, setOrderBy] = React.useState('name');
     const { data: chores, error: choresError, isLoading: isChoresLoading } = useGetChoresQuery();
     const { data: events, error: eventsError, isLoading: isEventsLoading } = useGetTodayEventsQuery();
+    const [deleteEvent, { isEventDeleteLoading }] = useDeleteEventMutation();
+    const [deleteEventModalUuid, setDeleteEventModalUuid] = useState('');
     const filters = useSelector((state) => state.agenda.filters);
     const sorts = useSelector((state) => state.agenda.sorts);
     const [rows, setRows] = useState([]);
@@ -52,6 +59,12 @@ export default function ToDoList() {
     const handleViewChange = function () {
         setView(!view);
         localStorage.setItem('agendaView', !view);
+    };
+
+    const handleDeleteEvent = () => {
+        deleteEvent({ uuid: deleteEventModalUuid });
+        setDeleteEventModalUuid('');
+
     };
 
     if (choresError || eventsError) {
@@ -98,7 +111,14 @@ export default function ToDoList() {
                                 {rows.map((row, key) => {
                                     const labelId = `enhanced-table-checkbox-${key}`;
                                     return (
-                                        <ToDoListItem headCells={headCells} key={key} labelId={labelId} row={row} />
+                                        <ToDoListItem
+                                            isEventDeleteLoading={isEventDeleteLoading}
+                                            setDeleteEventModalUuid={setDeleteEventModalUuid}
+                                            headCells={headCells}
+                                            key={key}
+                                            labelId={labelId}
+                                            row={row}
+                                        />
                                     );
                                 })}
                             </TableBody>
@@ -106,6 +126,28 @@ export default function ToDoList() {
                     </TableContainer>
                 </CardContent>
             )}
+            {deleteEventModalUuid ? (
+                <Dialog
+                    aria-labelledby="delete-event-modal"
+                    aria-describedby="delete-event-confirmation"
+                    maxWidth="xs"
+                    open={!!deleteEventModalUuid}
+                >
+                    <DialogTitle id="confirmation-delete-event-title">Delete Event</DialogTitle>
+                    <DialogContent>
+                        <p>Are you sure you want to delete this event?</p>
+                        <p><b>{events.find(e => e.uuid ===deleteEventModalUuid).name}</b></p>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button autoFocus onClick={() => setDeleteEventModalUuid('')} color="primary">
+                            Cancel
+                        </Button>
+                        <Button onClick={handleDeleteEvent} color="primary">
+                            Ok
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            ) : null}
         </Card>
     );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import DateRangeIcon from '@material-ui/icons/DateRange';
+import DeleteIcon from '@material-ui/icons/DeleteForever';
 import TimerIcon from '@material-ui/icons/Timer';
 import WatchLaterIcon from '@material-ui/icons/WatchLater';
 import TableRow from '@material-ui/core/TableRow';
@@ -22,7 +23,9 @@ import { toDoItemStyles as useStyles } from './styles';
 import agendaStatuses from '../../../constants/agendaStatuses';
 import EditIcon from '@material-ui/icons/Edit';
 
-export default function ToDoListItem({ headCells, row, labelId }) {
+export default function ToDoListItem({
+    headCells, row, labelId, setDeleteEventModalUuid, isEventDeleteLoading
+}) {
     const classes = useStyles();
     const [rescheduleChore, { isChoreRescheduleLoading }] = useRescheduleChoreMutation();
     const [addEvent, { isEventAddLoading }] = useAddEventMutation();
@@ -85,13 +88,12 @@ export default function ToDoListItem({ headCells, row, labelId }) {
 
     };
 
-    if (isEventAddLoading || isEventUpdateLoading || isChoreRescheduleLoading) {
+    if (isEventAddLoading || isEventUpdateLoading || isChoreRescheduleLoading || isEventDeleteLoading) {
         return (<div>Loading...</div>);
     }
 
     return (
         <TableRow
-            hover
             role="checkbox"
             tabIndex={-1}
             key={`${row.uuid}`}
@@ -140,7 +142,7 @@ export default function ToDoListItem({ headCells, row, labelId }) {
                             />
                         ) : null}
                         <Tooltip title="Undo">
-                            <IconButton onClick={()=> setEditChoreDate(false)}>
+                            <IconButton onClick={() => setEditChoreDate(false)}>
                                 <UndoIcon />
                             </IconButton>
                         </Tooltip>
@@ -157,10 +159,10 @@ export default function ToDoListItem({ headCells, row, labelId }) {
             </TableCell>
             <TableCell>{agendaStatuses[row.status]}</TableCell>
             <TableCell align="right">{row.formattedDueDate}</TableCell>
-            {headCells.findIndex(c => c.id === 'frequency') >=0 ? (
+            {headCells.findIndex(c => c.id === 'frequency') >= 0 ? (
                 <TableCell>{row.formattedFrequency}</TableCell>) : null
             }
-            {headCells.findIndex(c => c.id === 'lastCompletedDate') >=0 ? (
+            {headCells.findIndex(c => c.id === 'lastCompletedDate') >= 0 ? (
                 <TableCell align="right">
                     {row.type === 'chore' ? row.formattedLastCompletedDate : (row.status === 'done' && editEventDate) ? (
                         <span>
@@ -175,7 +177,7 @@ export default function ToDoListItem({ headCells, row, labelId }) {
                                 }}
                                 variant="inline"
                             />
-                            <IconButton onClick={()=> setEditEventDate(false)}>
+                            <IconButton onClick={() => setEditEventDate(false)}>
                                 <UndoIcon />
                             </IconButton>
                             <IconButton onClick={handleEditCompletedDate}>
@@ -183,12 +185,7 @@ export default function ToDoListItem({ headCells, row, labelId }) {
                             </IconButton>
                         </span>
                     ) : row.status === 'done' && !editEventDate ? (
-                        <span className={classes.editableTableCell} onClick={() => setEditEventDate(true)}>
-                            <IconButton onClick={handleEditCompletedDate}>
-                                <EditIcon />
-                            </IconButton>
-                            {row.formattedLastCompletedDate}
-                        </span>
+                        <span>{row.formattedLastCompletedDate}</span>
                     ) : (
                         <span className={classes.editableTableCell}>
                             {row.formattedLastCompletedDate}
@@ -210,6 +207,20 @@ export default function ToDoListItem({ headCells, row, labelId }) {
                                 <CheckCircleIcon />
                             </IconButton>
                         </Tooltip>
+                    ) : null}
+                    {row.type === 'event' ? (
+                        <>
+                            <Tooltip title="Edit Event">
+                                <IconButton onClick={() => setEditEventDate(true)}>
+                                    <EditIcon />
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete Event">
+                                <IconButton aria-label="Delete Event" onClick={()=>setDeleteEventModalUuid(row.uuid)}>
+                                    <DeleteIcon />
+                                </IconButton>
+                            </Tooltip>
+                        </>
                     ) : null}
                 </div>
             </TableCell>
