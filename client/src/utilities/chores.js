@@ -258,6 +258,7 @@ export function formatChores(chores) {
                     hasTime: !!(chore.has_time),
                     parsedFrequency,
                     formattedFrequency: formatFrequency(chore),
+                    location: chore.location,
                     reason: chore.reason || '',
                     description: chore.description || '',
                     status: isToday(dueDate) ? 'attention' : 'upcoming',

@@ -29,6 +29,7 @@ import Select from '@material-ui/core/Select';
 import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
 import FrequencyCell from './FrequencyCell';
+import UndoIcon from '@material-ui/icons/Undo';
 
 export default function Row({ chore, tags }) {
     const [updateChore, { isLoading: isUpdateChoreLoading }] = useUpdateChoreMutation();
@@ -36,8 +37,8 @@ export default function Row({ chore, tags }) {
     const [editName, setEditName] = useState(false);
     const [editTags, setEditTags] = useState(false);
     const [name, setName] = useState(chore.name);
-    // const [location, setLocation] = useState('');
-    // const [reason, setReason] = useState('');
+    const [location, setLocation] = useState(chore.location);
+    const [reason, setReason] = useState(chore.reason);
     const [selectedTagUuids, setSelectedTags] = useState(chore.tags.map(t => t.uuid) || []);
     const selectedTags = selectedTagUuids.reduce((acc, uuid) => {
         const selectedTag = tags && tags.length && tags.find(t => t.uuid === uuid);
@@ -85,6 +86,20 @@ export default function Row({ chore, tags }) {
             name
         });
         setEditName(!editName);
+    };
+
+    const handleReasonSaveClick = () => {
+        updateChore({
+            uuid: chore.uuid,
+            reason
+        });
+    };
+
+    const handleLocationSaveClick = () => {
+        updateChore({
+            uuid: chore.uuid,
+            location
+        });
     };
 
     const handleDescriptionSaveClick = () => {
@@ -182,7 +197,7 @@ export default function Row({ chore, tags }) {
                     </div>
                 )}
             </TableCell>
-            <TableCell align="right">
+            <TableCell align="center">
                 <IconButton aria-label="expand chore" size="small" onClick={() => setOpen(!open)}>
                     {open ? <VisibilityIcon /> : <VisibilityOffIcon />}
                 </IconButton>
@@ -192,34 +207,41 @@ export default function Row({ chore, tags }) {
             <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
                 <Collapse in={open} timeout="auto" unmountOnExit>
                     <Box margin={0} className={classes.historyContainer}>
-                        <Typography variant="h6" gutterBottom component="span">
+                        <Typography variant="h6" component="h4">
                             Directions
                             <IconButton onClick={handleDescriptionSaveClick}><SaveIcon /></IconButton>
                         </Typography>
                         <EditorContent className={classes.entryContainer} editor={editor} id={`chore-description-${chore.uuid}`} />
                         <TipTapMenu editor={editor} />
-                        <Typography variant="h6" gutterBottom component="span">
-                            Why it's Important
+                        <Typography className={classes.h4} variant="h6" component="h4">
+                            Why It's Important
                         </Typography>
-                        {!chore.reason ? <p>--</p> : (
-                            <p>{chore.reason}</p>
-                        )}
-                        <Typography variant="h6" gutterBottom component="span">
-                            Scheduled Start
+                        <Typography variant="subtitle1">
+                            What are the positive consequences of completing this? What are the negative consequences for not completing or delaying?
                         </Typography>
-                        {!chore.scheduled_at ? <p>--</p> : (
-                            <p>
-                                <span>{format(new Date(chore.scheduled_at), DATE_FORMAT)}</span>
-                                {/** TODO */}
-                            </p>
-                        )}
-                        <Typography variant="h6" gutterBottom component="span">
+                        <TextField
+                            label="Reasons"
+                            id={`chore-reason-input-${chore.reason}`}
+                            onChange={evt => setReason(evt.target.value)}
+                            style={{ width: '100%', maxWidth: '700px' }}
+                            multiline
+                            value={reason}
+                        />
+                        <IconButton onClick={() => setReason(chore.reason)}><UndoIcon /></IconButton>
+                        <IconButton onClick={handleReasonSaveClick}><SaveIcon /></IconButton>
+                        <Typography className={classes.h4} variant="h6" component="h4">
                             Location
                         </Typography>
-                        {!chore.location ? <p>--</p> : (
-                            <p>{chore.location}</p>
-                        )}
-                        <Typography variant="h6" gutterBottom component="span">
+                        <TextField
+                            label="Location"
+                            id={`chore-location-input-${chore.location}`}
+                            onChange={evt => setLocation(evt.target.value)}
+                            style={{ width: '100%', maxWidth: '700px' }}
+                            value={location}
+                        />
+                        <IconButton onClick={() => setLocation(chore.location)}><UndoIcon /></IconButton>
+                        <IconButton onClick={handleLocationSaveClick}><SaveIcon /></IconButton>
+                        <Typography className={classes.h4} variant="h6" component="h4">
                             Most Recent History
                         </Typography>
                         {!chore.history ? <div>No History</div> : (

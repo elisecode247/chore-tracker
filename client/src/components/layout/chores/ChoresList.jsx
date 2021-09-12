@@ -47,7 +47,7 @@ export default function ChoresList() {
                             <TableCell className={classes.borderRight}>Name</TableCell>
                             <TableCell className={classes.borderRight}>When</TableCell>
                             <TableCell className={classes.borderRight}>Categories</TableCell>
-                            <TableCell></TableCell>
+                            <TableCell>Details</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
