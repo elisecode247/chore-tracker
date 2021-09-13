@@ -1,10 +1,12 @@
 import { createSlice } from '@reduxjs/toolkit';
 const savedFilters = localStorage.getItem('filters');
 const savedSorts = localStorage.getItem('sorts');
+const ignoredChoresToday = localStorage.getItem('agendaIgnoredChoresToday');
 
 const initialState = {
     filters: JSON.parse(savedFilters) || [],
-    sorts: JSON.parse(savedSorts) || [{ id: 0, name: 'name', direction: 'asc' }]
+    sorts: JSON.parse(savedSorts) || [{ id: 0, name: 'name', direction: 'asc' }],
+    todaySkippedChores: JSON.parse(ignoredChoresToday) || []
 };
 
 export const agendaSlice = createSlice({
@@ -50,13 +52,29 @@ export const agendaSlice = createSlice({
                 ...state,
                 sorts: updatedSorts
             };
-        }
+        },
+        ignoreChoreToday: (state, action) => {
+            state.todaySkippedChores.push({ uuid: action.payload.uuid, date: new Date() });
+        },
+        updateTodayIgnoredChores: (state, action) => {
+            state.todaySkippedChores = action.payload;
+        },
     },
 });
 
 export const agendaName = agendaSlice.name;
 export const agendaReducer = agendaSlice.reducer;
 
-export const { addFilter, deleteFilter, updateFilter, addSort, deleteSort, updateSort, reOrderSorts } = agendaSlice.actions;
+export const {
+    addFilter,
+    deleteFilter,
+    updateFilter,
+    addSort,
+    deleteSort,
+    updateSort,
+    reOrderSorts,
+    ignoreChoreToday,
+    updateTodayIgnoredChores
+} = agendaSlice.actions;
 
 export default agendaSlice;

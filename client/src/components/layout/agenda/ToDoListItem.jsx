@@ -3,14 +3,12 @@ import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import DateRangeIcon from '@material-ui/icons/DateRange';
 import DeleteIcon from '@material-ui/icons/DeleteForever';
 import TimerIcon from '@material-ui/icons/Timer';
-import WatchLaterIcon from '@material-ui/icons/WatchLater';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
 import IconButton from '@material-ui/core/IconButton';
 import Tooltip from '@material-ui/core/Tooltip';
 import { useAddEventMutation, useUpdateEventMutation } from '../../../slices/eventsApiSlice';
 import { useRescheduleChoreMutation } from '../../../slices/choresApiSlice';
-import addDays from 'date-fns/addDays';
 import {
     KeyboardTimePicker,
     KeyboardDatePicker,
@@ -22,6 +20,9 @@ import formatScheduledAt from '../../../utilities/formatScheduledAt';
 import { toDoItemStyles as useStyles } from './styles';
 import agendaStatuses from '../../../constants/agendaStatuses';
 import EditIcon from '@material-ui/icons/Edit';
+import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
+import agenda from '../../../slices/agendaSlice';
+import { useDispatch } from 'react-redux';
 
 export default function ToDoListItem({
     headCells, row, labelId, setDeleteEventModalUuid, isEventDeleteLoading
@@ -35,6 +36,8 @@ export default function ToDoListItem({
     const [completedDateTime, setCompletedDateTime] = useState(new Date());
     const [startDate, setStartDate] = useState(new Date());
     const [startTime, setStartTime] = useState(new Date());
+    const dispatch = useDispatch();
+    const { ignoreChoreToday } = agenda.actions;
 
     const handleCompletedEvent = function (uuid, type) {
         if (type === 'chore') {
@@ -52,11 +55,8 @@ export default function ToDoListItem({
         }
     };
 
-    const handleRescheduleTomorrowEvent = function (uuid, scheduledAt) {
-        rescheduleChore({
-            uuid,
-            scheduledAt: addDays(new Date(), 1)
-        });
+    const handleIgnoreChoreToday = function (uuid) {
+        dispatch(ignoreChoreToday({ uuid }));
     };
 
     const handleAddProgressEvent = function (uuid) {
@@ -101,9 +101,9 @@ export default function ToDoListItem({
             <TableCell padding="checkbox">
                 {row.type === 'chore' ? (
                     <div className={classes.tableCell}>
-                        <Tooltip title="Reschedule tomorrow">
-                            <IconButton aria-label="Reschedule tomorrow" onClick={() => handleRescheduleTomorrowEvent(row.uuid, row)}>
-                                <WatchLaterIcon />
+                        <Tooltip title="Skip chore today">
+                            <IconButton aria-label="Skip chore today" onClick={() => handleIgnoreChoreToday(row.uuid)}>
+                                <VisibilityOffIcon />
                             </IconButton>
                         </Tooltip>
                         <Tooltip title="Reschedule">

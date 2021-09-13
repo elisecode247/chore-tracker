@@ -19,6 +19,7 @@ import { columns } from './utilities';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import ToDoListTagFilterHead from './ToDoListTagFilterHead';
 import ToDoListFilterHead from './ToDoListFilterHead';
+import ToDoListSkippedFilterHead from './ToDoListSkippedFilterHead';
 import ToDoListSortHead from './ToDoListSortHead';
 import { useSelector } from 'react-redux';
 import Typography from '@material-ui/core/Typography';
@@ -26,6 +27,7 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogActions from '@material-ui/core/DialogActions';
+import isToday from 'date-fns/isToday';
 
 export default function ToDoList() {
     const desktop = useMediaQuery('(min-width:650px)');
@@ -43,12 +45,13 @@ export default function ToDoList() {
     const [deleteEventModalUuid, setDeleteEventModalUuid] = useState('');
     const filters = useSelector((state) => state.agenda.filters);
     const sorts = useSelector((state) => state.agenda.sorts);
+    const todaySkippedChores =useSelector((state) => state.agenda.todaySkippedChores);
     const [rows, setRows] = useState([]);
     const [selectedTags, setSelectedTags] = useState((localStorage.getItem('agendaSelectedTags') && JSON.parse(localStorage.getItem('agendaSelectedTags'))) || []);
 
     useEffect(() => {
-        setRows(calculateRows({ chores, events, filters, selectedTags, sorts }));
-    }, [chores, events, selectedTags, sorts, filters]);
+        setRows(calculateRows({ chores, events, filters, selectedTags, sorts, todaySkippedChores }));
+    }, [chores, events, selectedTags, sorts, filters, todaySkippedChores]);
 
     const handleRequestSort = (event, property) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -92,6 +95,7 @@ export default function ToDoList() {
                     </Typography>
                     <ToDoListTagFilterHead selectedTags={selectedTags} setSelectedTags={setSelectedTags} />
                     <ToDoListFilterHead headCells={headCells} />
+                    <ToDoListSkippedFilterHead chores={chores} todaySkippedChores={todaySkippedChores} />
                     <ToDoListSortHead headCells={headCells} />
                     <TableContainer>
                         <Table
@@ -152,7 +156,7 @@ export default function ToDoList() {
     );
 }
 
-const calculateRows = function ({ chores, events, filters, selectedTags, sorts }) {
+const calculateRows = function ({ chores, events, filters, selectedTags, sorts, todaySkippedChores }) {
     const items = Object.values({ ...formatChores(chores), ...formatEvents(events) });
 
     return stableSort(items.filter(item => {
@@ -195,6 +199,10 @@ const calculateRows = function ({ chores, events, filters, selectedTags, sorts }
                 });
             }
         }
-        return matchesAllTags && keep;
+        const skippedTodayChore = todaySkippedChores.find(chore => {
+            return chore.uuid === item.uuid && isToday(new Date(chore.date));
+        });
+
+        return matchesAllTags && keep && !skippedTodayChore;
     }), sorts);
 };
