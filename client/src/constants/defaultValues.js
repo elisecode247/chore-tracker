@@ -23,7 +23,7 @@ export const defaultJournalSettings = {
     journalTemplate: ''
 };
 
-export const userSettings = {
+export const defaultUserSettings = {
     journalSettings: defaultJournalSettings,
     choreSettings: {
         choreTemplate: defaultDescription

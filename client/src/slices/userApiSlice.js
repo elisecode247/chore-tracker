@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { userSettings } from '../constants/defaultValues';
+import { defaultUserSettings } from '../constants/defaultValues';
 
 export const signUpUser = createAsyncThunk(
     'user/signUpUser',
@@ -130,7 +130,7 @@ export const userApi = createSlice({
         uuid: '',
         email: '',
         username: '',
-        settings: userSettings,
+        settings: defaultUserSettings,
         isFetching: false,
         isSuccess: false,
         isError: false,
@@ -184,7 +184,7 @@ export const userApi = createSlice({
             state.uuid = payload.uuid;
             state.email = payload.email;
             state.username = payload.email;
-            state.settings = payload.settings;
+            state.settings = parseUserSettings(payload.settings);
         },
         [fetchUserByToken.rejected]: (state) => {
             state.isError = true;
@@ -209,6 +209,18 @@ export const userApi = createSlice({
         },
     },
 });
+
+const parseUserSettings = function(settings) {
+    try {
+        if(!Object.entries(settings).length) {
+            return defaultUserSettings;
+        }
+        return settings;
+    } catch (err) {
+        console.error(err);
+        return defaultUserSettings;
+    }
+};
 
 export const { clearState } = userApi.actions;
 
