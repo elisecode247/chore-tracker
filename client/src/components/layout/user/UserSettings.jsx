@@ -11,7 +11,6 @@ import StarterKit from '@tiptap/starter-kit';
 import InputLabel from '@material-ui/core/InputLabel';
 import Typography from '@material-ui/core/Typography';
 import { updateUserSettings } from '../../../slices/userApiSlice';
-import { userSettings as defaultUserSettings } from '../../../constants/defaultValues';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -30,8 +29,7 @@ export default function UserSettings() {
     const classes = useStyles();
     const dispatch = useDispatch();
     const { settings, isFetching: isUserLoading, isError: isUserError } = useSelector(userSelector);
-    const userSettings = (Object.entries(settings) && Object.entries(settings).length && settings) || defaultUserSettings;
-    const [journalInstructions, setJournalInstructions] = useState(userSettings.journalSettings.journalInstructions);
+    const [journalInstructions, setJournalInstructions] = useState(settings.journalSettings.journalInstructions);
     const journalEntryEditor = useEditor({
         extensions: [
             StarterKit,
@@ -55,19 +53,19 @@ export default function UserSettings() {
 
     useEffect(() => {
         if (journalEntryEditor && !journalEntryEditor.isDestroyed) {
-            journalEntryEditor.commands.setContent(userSettings.journalSettings.journalTemplate);
+            journalEntryEditor.commands.setContent(settings.journalSettings.journalTemplate);
         }
-    }, [journalEntryEditor, userSettings]);
+    }, [journalEntryEditor, settings]);
 
     useEffect(() => {
         if (choreTemplateEditor && !choreTemplateEditor.isDestroyed) {
-            choreTemplateEditor.commands.setContent(userSettings.choreSettings.choreTemplate);
+            choreTemplateEditor.commands.setContent(settings.choreSettings.choreTemplate);
         }
-    }, [choreTemplateEditor, userSettings]);
+    }, [choreTemplateEditor, settings]);
 
     const handleJournalSave = function () {
         dispatch(updateUserSettings({
-            ...userSettings,
+            ...settings,
             journalSettings: {
                 journalTemplate: journalEntryEditor.getHTML(),
                 journalInstructions: journalInstructions
@@ -77,7 +75,7 @@ export default function UserSettings() {
 
     const handleChoreSave = function () {
         dispatch(updateUserSettings({
-            ...userSettings,
+            ...settings,
             choreSettings: {
                 choreTemplate: choreTemplateEditor.getHTML(),
             }

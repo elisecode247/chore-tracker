@@ -1,4 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
+import format from 'date-fns/format';
+import { DATE_AND_TIME_FORMAT } from '../constants/dateTimeFormats';
 const savedFilters = localStorage.getItem('filters');
 const savedSorts = localStorage.getItem('sorts');
 const ignoredChoresToday = localStorage.getItem('agendaIgnoredChoresToday');
@@ -54,7 +56,7 @@ export const agendaSlice = createSlice({
             };
         },
         ignoreChoreToday: (state, action) => {
-            state.todaySkippedChores.push({ uuid: action.payload.uuid, date: new Date() });
+            state.todaySkippedChores.push({ uuid: action.payload.uuid, date: format(new Date(), DATE_AND_TIME_FORMAT) });
         },
         updateTodayIgnoredChores: (state, action) => {
             state.todaySkippedChores = action.payload;

@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { userSettings } from '../constants/defaultValues';
 
 export const signUpUser = createAsyncThunk(
     'user/signUpUser',
@@ -129,7 +130,7 @@ export const userApi = createSlice({
         uuid: '',
         email: '',
         username: '',
-        settings: {},
+        settings: userSettings,
         isFetching: false,
         isSuccess: false,
         isError: false,
