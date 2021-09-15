@@ -6,6 +6,19 @@ export const eventsApi = createApi({
     baseQuery: fetchBaseQuery(baseQuery),
     tagTypes: ['events'],
     endpoints: (builder) => ({
+        getAllEvents: builder.query({
+            query: () => ({
+                url: 'events',
+                validateStatus: (response, result) => {
+                    if(!result.success) {
+                        console.error(result.error);
+                    }
+                    return response.status === 200 && result.success;
+                }
+            }),
+            transformResponse: (response) => response.data,
+            providesTags: ['events']
+        }),
         getDoneEvents: builder.query({
             query: () => 'events/incomplete',
             transformResponse: (response) => response.data,
@@ -70,6 +83,13 @@ export const eventsApi = createApi({
                     ...(startedAt ? { started_at: startedAt } : {}),
                     ...(completedAt ? { completed_at: completedAt } : {})
                 },
+                validateStatus: (response, result) => {
+                    if(!result.success) {
+                        console.error(result);
+                        return false;
+                    }
+                    return response.status === 200 && result.success;
+                }
             }),
             invalidatesTags: ['events']
 
@@ -81,6 +101,7 @@ export const {
     useAddEventMutation,
     useDeleteEventMutation,
     useUpdateEventMutation,
+    useGetAllEventsQuery,
     useGetDoneEventsQuery,
     useGetTodayEventsQuery,
     useGetUndoneEventsQuery
