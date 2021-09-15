@@ -20,6 +20,10 @@ const SignUp = () => {
         }
     }, [dispatch, errorMessage, history, isSuccess, isError]);
 
+    if (isError) {
+        return 'Error occurred';
+    }
+
     return (
         <>
             <h1>
