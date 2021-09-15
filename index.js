@@ -307,16 +307,14 @@ app.get('/api/v1/events/today', verifyToken, async (req, res) => {
 app.get('/api/v1/events', verifyToken, async (req, res) => {
     try {
         const result = await database.query(`
-            SELECT e.*, c.*
+            SELECT e.*, c.name, c.uuid as chore_uuid
             FROM event as e
             INNER JOIN chore as c ON e.chore_id = c.id
-            WHERE
-                status = 'done' AND
-                c.user_id = $1)
+            WHERE c.user_id = $1
         `, [req.user.id]);
         res.send({ success: true, data: result.rows });
     } catch (err) {
-        res.send('Error ' + err);
+        res.send({ success: false, error: err });
     }
 });
 
