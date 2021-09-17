@@ -25,7 +25,7 @@ import {
 import { endOfMonth } from 'date-fns';
 
 function getDayOfWeekLabel(d) {
-    switch(parseInt(d)){
+    switch (parseInt(d)) {
     case 0: return 'Sunday';
     case 1: return 'Monday';
     case 2: return 'Tuesday';
@@ -77,10 +77,10 @@ export function calculateDueDate(frequency, lastCompletedDate, chore) {
             let dateCounter = lastCompletedDate && isToday(lastCompletedDate) ? addDays(startOfToday, 1) : scheduledDateTime;
             let dayFound = false;
             while (!dayFound) {
-                if(scheduledDaysOfWeek.includes(getDay(dateCounter))){
+                if (scheduledDaysOfWeek.includes(getDay(dateCounter))) {
                     dayFound = true;
                 } else {
-                    dateCounter = addDays(dateCounter,1);
+                    dateCounter = addDays(dateCounter, 1);
                 }
             }
             return dateCounter;
@@ -93,10 +93,10 @@ export function calculateDueDate(frequency, lastCompletedDate, chore) {
             let dateCounter = scheduledToday;
             let dayFound = false;
             while (!dayFound) {
-                if(scheduledDaysOfWeek.includes(getDay(dateCounter))){
+                if (scheduledDaysOfWeek.includes(getDay(dateCounter))) {
                     dayFound = true;
                 } else {
-                    dateCounter = addDays(dateCounter,1);
+                    dateCounter = addDays(dateCounter, 1);
                 }
             }
             return dateCounter;
@@ -104,10 +104,10 @@ export function calculateDueDate(frequency, lastCompletedDate, chore) {
             let dateCounter = isToday(lastCompletedDate) ? addDays(lastCompletedDate, 1) : lastCompletedDate;
             let dayFound = false;
             while (!dayFound) {
-                if(scheduledDaysOfWeek.includes(getDay(dateCounter))){
+                if (scheduledDaysOfWeek.includes(getDay(dateCounter))) {
                     dayFound = true;
                 } else {
-                    dateCounter = addDays(dateCounter,1);
+                    dateCounter = addDays(dateCounter, 1);
                 }
             }
             return dateCounter;
@@ -121,7 +121,7 @@ export function calculateDueDate(frequency, lastCompletedDate, chore) {
                 return startOfMonth(scheduledDateTime);
             } else if (!lastCompletedDate && !isAfter(scheduledDateTime, endOfDay(scheduledToday))) {
                 return scheduledToday;
-            } else if(isAfter(scheduledDateTime, endOfMonth(scheduledToday))) {
+            } else if (isAfter(scheduledDateTime, endOfMonth(scheduledToday))) {
                 return startOfMonth(scheduledDateTime);
             } else if (isThisMonth(lastCompletedDate)) {
                 return addMonths(startOfMonth(lastCompletedDate), frequency.repeatAmount);
@@ -141,8 +141,8 @@ export function calculateDueDate(frequency, lastCompletedDate, chore) {
 }
 
 function formatDueDate(dueDate, chore) {
-    if(!dueDate || !isValid(dueDate)) return 'Unknown error';
-    if(isToday(dueDate)){
+    if (!dueDate || !isValid(dueDate)) return 'Unknown error';
+    if (isToday(dueDate)) {
         return chore.has_time ? format(dueDate, TIME_FORMAT) : 'Today';
     }
     return chore.has_time ? format(dueDate, DAY_OF_WEEK_AND_DATE_AND_TIME) : format(dueDate, DAY_OF_WEEK_AND_DATE);
@@ -192,7 +192,7 @@ function formatFrequency(chore) {
         } else {
             when = `Every ${repeatAmount} days`;
         }
-        if(isAfter(scheduledAt, startOfDay(new Date()))) {
+        if (isAfter(scheduledAt, startOfDay(new Date()))) {
             when += ` ${startTime} ${startDate}`;
         }
         return when;
@@ -298,3 +298,16 @@ export function formatEvents(events) {
             };
         }, {});
 }
+
+export function formatFrequencyForServer({ repeatAmount = 1, repeatType }) {
+    if (!repeatType) return '';
+    if (!['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'].includes(repeatType)) return '';
+    return `FREQ=${repeatType};INTERVAL=${repeatAmount};`;
+}
+
+export const repeatTypeNoun = {
+    DAILY: 'day',
+    WEEKLY: 'week',
+    MONTHLY: 'month',
+    YEARLY: 'year'
+};

@@ -20,6 +20,7 @@ export const addChorePanelStyles = makeStyles((theme) => ({
     formControl: {
         display: 'block',
         marginRight: '1rem',
+        marginBottom: '1rem',
         minWidth: 120,
     },
     inlineBlock: {
@@ -30,9 +31,16 @@ export const addChorePanelStyles = makeStyles((theme) => ({
         padding: '1rem',
         fontWeight: 700
     },
+    switchFormControl: {
+        margin: '1rem 0 1rem 0'
+    },
     tagSelect: {
         minWidth: '100px'
-    }
+    },
+    tagSelectFormControl: {
+        display: 'block',
+        margin: '1rem 0 1rem 0'
+    },
 }));
 
 export const choresListStyles = makeStyles((theme) => ({

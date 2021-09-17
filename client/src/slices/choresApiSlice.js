@@ -16,14 +16,9 @@ export const choresApi = createApi({
             query: ({
                 name,
                 description = '',
-                isFrequencyChecked,
-                reason = '',
-                location = '',
-                scheduledAt = new Date(),
-                hasTime = false,
-                frequencyAmount,
-                frequencyType,
-                frequencySubtype,
+                startAt = new Date(),
+                endAt = null,
+                frequency,
                 selectedTags = []
             }) => ({
                 url: 'chores',
@@ -31,15 +26,9 @@ export const choresApi = createApi({
                 body: {
                     name,
                     description,
-                    reason,
-                    location,
-                    scheduledAt,
-                    hasTime,
-                    frequency: JSON.stringify({
-                        repeatType: isFrequencyChecked ? frequencyType : 'once',
-                        repeatAmount: frequencyAmount || 1,
-                        repeatSubtype: frequencySubtype || ''
-                    }),
+                    start_at: startAt,
+                    end_at: endAt,
+                    frequency,
                     selectedTags
                 },
                 validateStatus: (response, result) => {
@@ -58,8 +47,6 @@ export const choresApi = createApi({
                 name = '',
                 description = '',
                 isFrequencyChecked = null,
-                reason = '',
-                location = '',
                 scheduledAt = '',
                 hasTime = null,
                 frequencyAmount = 0,
@@ -74,8 +61,6 @@ export const choresApi = createApi({
                     enabled,
                     name,
                     description,
-                    reason,
-                    location,
                     scheduled_at: scheduledAt,
                     has_time: hasTime,
                     frequency: frequencyAmount ? JSON.stringify({

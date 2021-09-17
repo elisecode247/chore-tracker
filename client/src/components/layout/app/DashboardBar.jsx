@@ -66,11 +66,10 @@ export default function DashboardBar({ isFetching, onLogin, onLogOut, selectedTa
                         variant="scrollable"
                         scrollButtons="auto"
                     >
-                        <Tab label="Agenda" {...a11yProps(0)} />
-                        <Tab label="Calendar" {...a11yProps(1)} />
-                        <Tab label="Chores" {...a11yProps(2)} />
-                        <Tab label="Add New Chore" {...a11yProps(3)} />
-                        <Tab label="Customizations" {...a11yProps(4)} />
+                        <Tab label="Calendar" {...a11yProps(0)} />
+                        <Tab label="Chores" {...a11yProps(1)} />
+                        <Tab label="Add New Chore" {...a11yProps(2)} />
+                        <Tab label="Settings" {...a11yProps(3)} />
                     </Tabs>
                     <FormGroup className={classes.login}>
                         <FormControlLabel

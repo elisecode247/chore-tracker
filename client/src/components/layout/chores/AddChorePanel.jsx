@@ -3,8 +3,11 @@ import { useSelector } from 'react-redux';
 import { userSelector } from '../../../slices/userApiSlice';
 import { useAddChoreMutation } from '../../../slices/choresApiSlice';
 import { useGetTagsQuery } from '../../../slices/tagsApiSlice';
+import { addChorePanelStyles as useStyles } from './styles';
+import { formatFrequencyForServer, repeatTypeNoun } from '../../../utilities/chores';
+import { defaultDescription } from '../../../constants/defaultValues';
+import formatScheduledAt from '../../../utilities/formatScheduledAt';
 import Button from '@material-ui/core/Button';
-import Checkbox from '@material-ui/core/Checkbox';
 import Chip from '@material-ui/core/Chip';
 import Container from '@material-ui/core/Container';
 import FormControl from '@material-ui/core/FormControl';
@@ -13,19 +16,13 @@ import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
+import Switch from '@material-ui/core/Switch';
 import TextField from '@material-ui/core/TextField';
-import { defaultDescription } from '../../../constants/defaultValues';
-import {
-    KeyboardTimePicker,
-    KeyboardDatePicker
-} from '@material-ui/pickers';
+import { KeyboardTimePicker, KeyboardDatePicker } from '@material-ui/pickers';
 import Typography from '@material-ui/core/Typography';
-import formatScheduledAt from '../../../utilities/formatScheduledAt';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import TipTapMenu from '../../TipTapMenu';
-import { addChorePanelStyles as useStyles } from './styles';
-import { getFrequencySubTypeOptions } from '../../frequency/utilities';
 
 export default function AddChorePanel() {
     const { data: tags, error: errorTags, isLoading: isLoadingTags } = useGetTagsQuery();
@@ -33,16 +30,14 @@ export default function AddChorePanel() {
     const [addChore, { isLoading, isError, isSuccess }] = useAddChoreMutation();
     const classes = useStyles();
     const [name, setName] = useState('');
-    const [location, setLocation] = useState('');
-    const [reason, setReason] = useState('');
-    const [isFrequencyChecked, toggleFrequencyChecked] = useState(true);
-    const [frequencyAmount, setFrequencyAmount] = useState(1);
-    const [frequencyType, setFrequencyType] = useState('day');
-    const [frequencySubtype, setFrequencySubtype] = useState('day');
-    const [frequencySubTypes, setFrequencySubtypes] = useState(getFrequencySubTypeOptions('once'));
+    const [isRepeatChecked, toggleRepeatChecked] = useState(true);
+    const [repeatAmount, setRepeatAmount] = useState(1);
+    const [repeatType, setFrequencyType] = useState('DAILY');
     const [selectedTags, setSelectedTags] = useState([]);
-    const [scheduledDate, setScheduledDate] = useState(new Date());
-    const [scheduledTime, setScheduledTime] = useState(null);
+    const [startDate, setStartDate] = useState(new Date());
+    const [startTime, setStartTime] = useState(null);
+    const [endDate, setEndDate] = useState(new Date());
+    const [endTime, setEndTime] = useState(null);
     const editor = useEditor({
         extensions: [
             StarterKit,
@@ -52,10 +47,7 @@ export default function AddChorePanel() {
                 class: 'textEditorContainer'
             }
         },
-        content: `
-            <h1>Test</h1>
-            <h2>Tst2>/h2>
-        `
+        content: defaultDescription
     });
 
     useEffect(()=> {
@@ -64,33 +56,33 @@ export default function AddChorePanel() {
         }
     }, [settings, editor]);
 
-    const handleFrequencyAmountChange = (evt) => {
-        setFrequencyAmount(evt.target.value < 1 ? 1 : evt.target.value);
+    const handleRepeatAmountChange = (evt) => {
+        setRepeatAmount(evt.target.value < 1 ? 1 : evt.target.value);
     };
 
     const handleFrequencyTypeChange = (evt) => {
-        const frequencySubTypes = getFrequencySubTypeOptions(evt.target.value);
+        // const frequencySubTypes = getFrequencySubTypeOptions(evt.target.value);
         setFrequencyType(evt.target.value);
-        if(evt.target.value === 'week') {
-            setFrequencySubtype([]);
-        } else {
-            setFrequencySubtype(frequencySubTypes.length ? frequencySubTypes[0].value : '');
-        }
-        setFrequencySubtypes(frequencySubTypes);
+        // if(evt.target.value === 'week') {
+        //     setFrequencySubtype([]);
+        // } else {
+        //     setFrequencySubtype(frequencySubTypes.length ? frequencySubTypes[0].value : '');
+        // }
+        // setFrequencySubtypes(frequencySubTypes);
     };
 
-    const handleSubtypeWeekChange = (event) => {
-        const daysOfWeek = event.target.checked ? [...frequencySubtype, event.target.name] :
-            frequencySubtype.filter(name => (event.target.name !== name));
-        setFrequencySubtype(daysOfWeek);
-    };
+    // const handleSubtypeWeekChange = (event) => {
+    //     const daysOfWeek = event.target.checked ? [...frequencySubtype, event.target.name] :
+    //         frequencySubtype.filter(name => (event.target.name !== name));
+    //     setFrequencySubtype(daysOfWeek);
+    // };
 
-    const handleFrequencySubtypeChange = (evt) => {
-        setFrequencySubtype(evt.target.value);
-    };
+    // const handleFrequencySubtypeChange = (evt) => {
+    //     setFrequencySubtype(evt.target.value);
+    // };
 
-    const handleFrequencyCheck = () => {
-        toggleFrequencyChecked(!isFrequencyChecked);
+    const handleRepeatCheck = () => {
+        toggleRepeatChecked(!isRepeatChecked);
     };
 
     const handleSelectedTagsChange = (event) => {
@@ -99,20 +91,14 @@ export default function AddChorePanel() {
     };
 
     const handleSubmit = () => {
-        const hasTime = !!scheduledTime;
-        const scheduledAt = formatScheduledAt(scheduledDate, scheduledTime);
-
+        const startAt = formatScheduledAt(startDate, startTime);
+        const endAt = formatScheduledAt(endDate, endTime);
         addChore({
             name,
             description: editor.getHTML(),
-            location,
-            reason,
-            scheduledAt,
-            hasTime,
-            isFrequencyChecked,
-            frequencyAmount,
-            frequencyType,
-            frequencySubtype,
+            startAt,
+            ...(!isRepeatChecked ? { endAt } : {}),
+            frequency: formatFrequencyForServer({ repeatAmount, repeatType }),
             selectedTags
         });
     };
@@ -126,107 +112,136 @@ export default function AddChorePanel() {
             <Typography variant="h5" component="h2">
                 Add New Chore
             </Typography>
-            <form id="add-chore-modal-form">
+            <form id="add-chore-form">
                 <TextField id="add-chore-name-input" fullWidth label="What" onChange={(evt)=>setName(evt.target.value)} required type="text" />
                 <EditorContent className={classes.entryContainer} editor={editor} id="add-chore-description-input" />
                 <TipTapMenu editor={editor} />
-
-                <TextField id="add-chore-location-input" fullWidth label="Location" onChange={(evt)=>setLocation(evt.target.value)}/>
-                <TextField id="add-chore-reason-input" fullWidth label="Why it's important" onChange={(evt)=>setReason(evt.target.value)}/>
-                <FormControl className={`${classes.formControl} ${classes.inlineBlock}`} >
-                    <KeyboardDatePicker
-                        disableToolbar
-                        variant="inline"
-                        format="MM/dd/yyyy"
-                        margin="normal"
-                        id="scheduled-chore-date-local"
-                        label="Starting Date"
-                        value={scheduledDate}
-                        onChange={setScheduledDate}
-                        KeyboardButtonProps={{
-                            'aria-label': 'change date',
-                        }}
-                    />
-                </FormControl>
-                <FormControl className={`${classes.formControl} ${classes.inlineBlock}`} >
-                    <KeyboardTimePicker
-                        margin="normal"
-                        id="scheduled-chore-time-local"
-                        label="Starting Time"
-                        value={scheduledTime}
-                        onChange={setScheduledTime}
-                        KeyboardButtonProps={{
-                            'aria-label': 'change time',
-                        }}
-                        variant="inline"
-                    />
-                </FormControl>
-                <FormControl className={classes.formControl} fullWidth>
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={isFrequencyChecked}
-                                onChange={handleFrequencyCheck}
-                                name="checkedFrequency"
-                                color="primary"
+                <div>
+                    <FormControl className={`${classes.formControl} ${classes.inlineBlock}`} >
+                        <KeyboardDatePicker
+                            disableToolbar
+                            variant="inline"
+                            format="MM/dd/yyyy"
+                            margin="normal"
+                            id="start-chore-date-local"
+                            label="Start Date"
+                            value={startDate}
+                            onChange={setStartDate}
+                            KeyboardButtonProps={{
+                                'aria-label': 'change start date',
+                            }}
+                        />
+                    </FormControl>
+                    <FormControl className={`${classes.formControl} ${classes.inlineBlock}`} >
+                        <KeyboardTimePicker
+                            margin="normal"
+                            id="start-chore-time-local"
+                            label="Start Time (Optional)"
+                            value={startTime}
+                            onChange={setStartTime}
+                            KeyboardButtonProps={{
+                                'aria-label': 'change start time',
+                            }}
+                            variant="inline"
+                        />
+                    </FormControl>
+                </div>
+                {!isRepeatChecked ? (
+                    <div>
+                        <FormControl className={`${classes.formControl} ${classes.inlineBlock}`} >
+                            <KeyboardDatePicker
+                                disableToolbar
+                                variant="inline"
+                                format="MM/dd/yyyy"
+                                margin="normal"
+                                id="end-chore-date-local"
+                                label="End Date (Optional)"
+                                value={endDate}
+                                onChange={setEndDate}
+                                KeyboardButtonProps={{
+                                    'aria-label': 'change end date',
+                                }}
                             />
-                        }
-                        label="Repeat"
-                    />
-                    {isFrequencyChecked ? (
-                        <>
-                            <TextField
-                                label="Every"
-                                type="number"
-                                onChange={handleFrequencyAmountChange}
-                                value={frequencyAmount}
+                        </FormControl>
+                        <FormControl className={`${classes.formControl} ${classes.inlineBlock}`} >
+                            <KeyboardTimePicker
+                                margin="normal"
+                                id="end-chore-time-local"
+                                label="End Time (Optional)"
+                                value={endTime}
+                                onChange={setEndTime}
+                                KeyboardButtonProps={{
+                                    'aria-label': 'change end time',
+                                }}
+                                variant="inline"
                             />
+                        </FormControl>
+                    </div>
+                ) : null}
+                <FormControlLabel
+                    className={classes.switchFormControl}
+                    control={<Switch checked={isRepeatChecked} onChange={handleRepeatCheck} aria-label="repeat switch" />}
+                    label="Repeat"
+                    labelPlacement="start"
+                />
+                {isRepeatChecked ? (
+                    <div>
+                        <FormControl className={classes.formControl} >
                             <Select
-                                labelId="frequency-type-select-label"
-                                id="demo-simple-select"
-                                value={frequencyType}
+                                label="Repeat"
+                                id="repeat-type-select"
+                                value={repeatType}
                                 onChange={handleFrequencyTypeChange}
                             >
-                                <MenuItem value='day'>days</MenuItem>
-                                <MenuItem value='week'>weeks</MenuItem>
-                                <MenuItem value='month'>months</MenuItem>
-                                <MenuItem value='year'>years</MenuItem>
+                                <MenuItem value='DAILY'>Daily</MenuItem>
+                                <MenuItem value='WEEKLY'>Weekly</MenuItem>
+                                <MenuItem value='MONTHLY'>Monthly</MenuItem>
+                                <MenuItem value='YEARLY'>Yearly</MenuItem>
                             </Select>
-                            {frequencySubTypes.length ? (frequencyType === 'week' ? (
-                                <>
-                                    <div className={classes.and}> and </div>
+                        </FormControl>
+                        <FormControl className={classes.formControl} >
+                            <TextField
+                                label="Repeat Every"
+                                type="number"
+                                onChange={handleRepeatAmountChange}
+                                value={repeatAmount}
+                            />
+                            <p>{repeatTypeNoun[repeatType]}(s)</p>
+                        </FormControl>
+                        {/* {frequencySubTypes.length ? (repeatType === 'week' ? (
+                            <>
+                                <div className={classes.and}> and </div>
+                                {frequencySubTypes.map((subtype, idx) => {
+                                    return (
+                                        <FormControlLabel
+                                            key={idx} 
+                                            control={<Checkbox name={subtype.value} />}
+                                            label={subtype.label}
+                                            onChange={handleSubtypeWeekChange}
+                                        />
+                                    );
+                                })}
+                            </>
+                        ) : (frequencySubTypes.length ? (
+                            <>
+                                <span className={classes.and}> and </span>
+                                <InputLabel className={classes.tagLabel} id="frequency-subtype-select-label">On</InputLabel>
+                                <Select
+                                    labelId="frequency-subtype-select-label"
+                                    id="frequency-subtype-select"
+                                    value={frequencySubtype}
+                                    onChange={handleFrequencySubtypeChange}
+                                >
                                     {frequencySubTypes.map((subtype, idx) => {
-                                        return (
-                                            <FormControlLabel
-                                                key={idx} 
-                                                control={<Checkbox name={subtype.value} />}
-                                                label={subtype.label}
-                                                onChange={handleSubtypeWeekChange}
-                                            />
-                                        );
+                                        return (<MenuItem key={idx} value={subtype.value}>{subtype.label}</MenuItem>);
                                     })}
-                                </>
-                            ) : (frequencySubTypes.length ? (
-                                <>
-                                    <span className={classes.and}> and </span>
-                                    <InputLabel className={classes.tagLabel} id="frequency-subtype-select-label">On</InputLabel>
-                                    <Select
-                                        labelId="frequency-subtype-select-label"
-                                        id="frequency-subtype-select"
-                                        value={frequencySubtype}
-                                        onChange={handleFrequencySubtypeChange}
-                                    >
-                                        {frequencySubTypes.map((subtype, idx) => {
-                                            return (<MenuItem key={idx} value={subtype.value}>{subtype.label}</MenuItem>);
-                                        })}
-                                    </Select>
-                                </>
-                            ) : null)) : null}
-                        </>
-                    ) : null}
-                </FormControl>
+                                </Select>
+                            </>
+                        ) : null)) : null} */}
+                    </div>
+                ) : null}
                 {isLoadingTags ? (<div>Loading Tags...</div>) : ((tags && tags.length) || !errorTags ? (
-                    <FormControl>
+                    <FormControl className={classes.tagSelectFormControl}>
                         <InputLabel id="multiple-tags">Categories</InputLabel>
                         <Select
                             className={classes.tagSelect}

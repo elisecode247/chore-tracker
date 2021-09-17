@@ -1,54 +1,46 @@
 import React from 'react';
 import { useGetChoresQuery } from '../../../slices/choresApiSlice';
-import { useGetAllEventsQuery } from '../../../slices/eventsApiSlice';
 import Scheduler, { Resource } from 'devextreme-react/scheduler';
-import subMinutes from 'date-fns/subMinutes';
-import addMinutes from 'date-fns/addMinutes';
 import 'devextreme/dist/css/dx.material.purple.light.css';
 import '../../../styles/scheduler.css';
 import agendaStatuses from '../../../constants/agendaStatuses';
 import { useUpdateEventMutation } from '../../../slices/eventsApiSlice';
-import isValid from 'date-fns/isValid';
-import getHours from 'date-fns/getHours';
-import getMinutes from 'date-fns/getMinutes';
-import set from 'date-fns/set';
-
+import format from 'date-fns/format';
+import { TIME_FORMAT } from '../../../constants/dateTimeFormats';
+import ScheduleIcon from '@material-ui/icons/Schedule';
+import EventIcon from '@material-ui/icons/Event';
 const eventStatuses = Object.entries(agendaStatuses).map(([value, name]) => ({ name, value }));
 const today = new Date();
-const views = ['day', 'week', 'workWeek', 'month'];
+const views = ['agenda', 'day', 'week', 'workWeek', 'month'];
 
 export default function EventsList() {
     const { data: chores } = useGetChoresQuery();
-    const { data: events } = useGetAllEventsQuery();
+    // const { data: events } = useGetAllEventsQuery();
     const formattedChores = chores && chores.map((chore) => {
-        const scheduledAt = (chore.scheduled_at && new Date(chore.scheduled_at)) || null;
-        const scheduledTime = isValid(scheduledAt) ? { hours: getHours(scheduledAt), minutes: getMinutes(scheduledAt) } :
-            { hours: getHours(today), minutes: getMinutes(today) };
-        const scheduledToday = chore.has_time ? set(today, scheduledTime) : today;
-
         return {
             ...chore,
             text: chore.name,
-            startDate: scheduledToday,
-            endDate: addMinutes(scheduledToday, 30),
+            rule: chore.frequency,
+            startDate: new Date(chore.start_at),
+            ...(chore.frequency ? {} : { endDate: new Date(chore.end_at) }),
             type: 'chore',
-            allDay: !chore.has_time
-        };
-    });
-    const formattedEvents = events && events.map((event) => {
-        return {
-            ...event,
-            text: event.name,
-            type: 'event',
-            startDate: !event.started_at ? subMinutes(new Date(event.completed_at), 30) : new Date(event.started_at),
-            endDate: !event.completed_at ? addMinutes(new Date(event.started_at), 30) : new Date(event.completed_at),
             allDay: false
         };
     });
-    const allItems = [
-        ...(formattedEvents ? formattedEvents : []),
-        ...(formattedChores ? formattedChores : []),
-    ];
+    // const formattedEvents = events && events.map((event) => {
+    //     return {
+    //         ...event,
+    //         text: event.name,
+    //         type: 'event',
+    //         startDate: !event.started_at ? subMinutes(new Date(event.completed_at), 30) : new Date(event.started_at),
+    //         endDate: !event.completed_at ? addMinutes(new Date(event.started_at), 30) : new Date(event.completed_at),
+    //         allDay: false
+    //     };
+    // });
+    // const allItems = [
+    //     ...(formattedEvents ? formattedEvents : []),
+    //     ...(formattedChores ? formattedChores : []),
+    // ];
     const [updateEvent] = useUpdateEventMutation();
 
     const handleAppointmentUpdated = function (schedulerEvent) {
@@ -67,15 +59,17 @@ export default function EventsList() {
             <Scheduler id="scheduler"
                 adaptivityEnabled={true}
                 cellDuration={60}
-                dataSource={allItems}
+                dataSource={formattedChores}
                 views={views}
-                defaultCurrentView="day"
+                defaultCurrentView="month"
                 defaultCurrentDate={today}
                 startDayHour={6}
                 editing={true}
+                isCompact={false}
                 onAppointmentFormOpening={handleAppointmentFormOpening}
                 onAppointmentUpdated={handleAppointmentUpdated}
                 appointmentRender={renderAppointment}
+                recurrenceRuleExpr="rule"
             >
                 <Resource
                     dataSource={[
@@ -154,10 +148,12 @@ const handleAppointmentFormOpening = function (schedulerEvent) {
 };
 
 const renderAppointment = (model) => {
+    const data = model.appointmentData;
     return (
         <>
-            <b> {model.appointmentData.name} </b>
-            <i> {model.appointmentData.status} </i>
+            {data.type === 'chore' ? (<ScheduleIcon />) : (<EventIcon />)}
+            <b> {data.name} </b>
+            <i> {format(data.startDate, TIME_FORMAT)}</i>
         </>
     );
 };

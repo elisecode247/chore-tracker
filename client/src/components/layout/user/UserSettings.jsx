@@ -11,7 +11,9 @@ import StarterKit from '@tiptap/starter-kit';
 import InputLabel from '@material-ui/core/InputLabel';
 import Typography from '@material-ui/core/Typography';
 import { updateUserSettings } from '../../../slices/userApiSlice';
-
+import RestoreIcon from '@material-ui/icons/Restore';
+import Button from '@material-ui/core/Button';
+import { defaultDescription } from '../../../constants/defaultValues';
 const useStyles = makeStyles((theme) => ({
     root: {
     },
@@ -125,6 +127,9 @@ export default function UserSettings() {
                 </Typography>
                 <InputLabel className={classes.setting} htmlFor="chore-entry-template">Chore Entry Template</InputLabel>
                 <EditorContent id="chore-entry-template" className={classes.entryContainer} editor={choreTemplateEditor} />
+                <Button onClick={()=>{
+                    choreTemplateEditor.commands.setContent(defaultDescription);
+                }}><RestoreIcon/> Reset to Default</Button>
             </Paper>
         </div>
     );

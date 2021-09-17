@@ -29,11 +29,9 @@ CREATE TABLE "chore" (
   "name" varchar,
   "description" text,
   "frequency" text,
-  "location" text,
-  "reason" text,
-  "scheduled_at" timestamptz DEFAULT (now()),
+  "start_at" timestamptz DEFAULT (now()),
+  "end_at" timestamptz DEFAULT (now()),
   "timezone" text,
-  "has_time" boolean DEFAULT false,
   "created_at" timestamptz DEFAULT (now()),
   "updated_at" timestamptz DEFAULT (now())
 );

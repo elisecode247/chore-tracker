@@ -8,7 +8,6 @@ import DateFnsUtils from '@date-io/date-fns';
 import { useHistory } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { userSelector, fetchUserByToken, clearState } from '../../../slices/userApiSlice';
-import Agenda from '../agenda';
 import UserSettings from '../user/UserSettings';
 import AddChorePanel from '../chores/AddChorePanel';
 const defaultSelectedTab = (
@@ -49,18 +48,15 @@ const Dashboard = function() {
                 <MuiPickersUtilsProvider utils={DateFnsUtils}>
                     <DashboardBar isFetching={isFetching} onLogOut={onLogOut} selectedTab={selectedTab} setTab={handleSetTab} />
                     <TabPanel value={selectedTab} index={0}>
-                        <Agenda />
-                    </TabPanel>
-                    <TabPanel value={selectedTab} index={1}>
                         <EventsList />
                     </TabPanel>
-                    <TabPanel value={selectedTab} index={2}>
+                    <TabPanel value={selectedTab} index={1}>
                         <ChoresList />
                     </TabPanel>
-                    <TabPanel value={selectedTab} index={3}>
+                    <TabPanel value={selectedTab} index={2}>
                         <AddChorePanel />
                     </TabPanel>
-                    <TabPanel value={selectedTab} index={4}>
+                    <TabPanel value={selectedTab} index={3}>
                         <UserSettings />
                     </TabPanel>
                 </MuiPickersUtilsProvider>

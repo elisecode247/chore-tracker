@@ -96,10 +96,8 @@ app.get('/api/v1/chores', verifyToken, async (req, res) => {
                 c.description,
                 c.enabled,
                 c.frequency,
-                c.reason,
-                c.location,
-                c.scheduled_at,
-                c.has_time,
+                c.start_at,
+                c.end_at,
                 (
                     SELECT
                         array_to_json(array_agg(row_to_json(e)))
@@ -117,7 +115,6 @@ app.get('/api/v1/chores', verifyToken, async (req, res) => {
                     FROM (
                         SELECT
                             uuid,
-                            location,
                             notes,
                             started_at,
                             status,
@@ -146,15 +143,13 @@ app.post('/api/v1/chores', verifyToken, async (req, res) => {
                 name,
                 description,
                 frequency,
-                scheduled_at,
-                has_time,
-                location,
-                reason
+                start_at,
+                end_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING id AS chore_id
         ), ins2 AS (
-            SELECT id as tag_id FROM tag WHERE uuid = ANY($9::uuid[])
+            SELECT id as tag_id FROM tag WHERE uuid = ANY($7::uuid[])
         )
             INSERT INTO chore_tag (chore_id, tag_id)
             SELECT chore_id, tag_id
@@ -165,10 +160,8 @@ app.post('/api/v1/chores', verifyToken, async (req, res) => {
             req.body.name,
             req.body.description,
             req.body.frequency,
-            req.body.scheduledAt,
-            req.body.hasTime,
-            req.body.location,
-            req.body.reason,
+            req.body.start_at,
+            req.body.end_at,
             req.body.selectedTags
         ]);
         res.send({ success: true });
