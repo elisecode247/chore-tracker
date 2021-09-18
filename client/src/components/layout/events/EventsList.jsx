@@ -7,7 +7,7 @@ import agendaStatuses from '../../../constants/agendaStatuses';
 import { useUpdateEventMutation } from '../../../slices/eventsApiSlice';
 const eventStatuses = Object.entries(agendaStatuses).map(([value, name]) => ({ name, value }));
 const today = new Date();
-const views = ['agenda', 'day', 'week', 'workWeek', 'month'];
+const views = ['agenda', 'day', 'week'];
 
 export default function EventsList() {
     const { data: chores } = useGetChoresQuery();
@@ -53,18 +53,17 @@ export default function EventsList() {
     return (
         <div className="dx-viewport" spacing={1}>
             <Scheduler id="scheduler"
-                cellDuration={60}
+                cellDuration={30}
                 dataSource={formattedChores}
                 views={views}
                 defaultCurrentDate={today}
                 defaultCurrentView="month"
                 startDayHour={6}
-                editing={true}
-                isCompact={false}
                 onAppointmentFormOpening={handleAppointmentFormOpening}
                 onAppointmentUpdated={handleAppointmentUpdated}
                 appointmentRender={renderAppointment}
                 recurrenceRuleExpr="rule"
+                useDropDownViewSwitcher={false}
             >
                 <Resource
                     dataSource={[
