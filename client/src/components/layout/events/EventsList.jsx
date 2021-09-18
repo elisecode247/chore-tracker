@@ -7,7 +7,7 @@ import agendaStatuses from '../../../constants/agendaStatuses';
 import { useUpdateEventMutation } from '../../../slices/eventsApiSlice';
 const eventStatuses = Object.entries(agendaStatuses).map(([value, name]) => ({ name, value }));
 const today = new Date();
-const views = ['agenda', 'day', 'week'];
+const views = ['agenda', 'day', 'week', 'month'];
 
 export default function EventsList() {
     const { data: chores } = useGetChoresQuery();
@@ -58,6 +58,7 @@ export default function EventsList() {
                 views={views}
                 defaultCurrentDate={today}
                 defaultCurrentView="month"
+                height={600}
                 startDayHour={6}
                 onAppointmentFormOpening={handleAppointmentFormOpening}
                 onAppointmentUpdated={handleAppointmentUpdated}
