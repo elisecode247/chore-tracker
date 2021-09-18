@@ -303,9 +303,9 @@ export function formatFrequencyForServer({ repeatAmount = 1, repeatType }) {
     let frequencyString = '';
     if (!repeatType) return frequencyString;
     if (!['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'].includes(repeatType)) return frequencyString;
-    frequencyString += `FREQ=${repeatType};`;
+    frequencyString += `FREQ=${repeatType}`;
     if(repeatAmount > 1) {
-        frequencyString += `INTERVAL=${repeatAmount};`;
+        frequencyString += `;INTERVAL=${repeatAmount}`;
     }
     return frequencyString;
 }
