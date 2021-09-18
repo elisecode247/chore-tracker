@@ -57,6 +57,7 @@ export default function EventsList() {
                 dataSource={formattedChores}
                 views={views}
                 defaultCurrentDate={today}
+                defaultCurrentView="month"
                 startDayHour={6}
                 editing={true}
                 isCompact={false}
