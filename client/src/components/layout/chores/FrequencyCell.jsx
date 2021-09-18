@@ -54,17 +54,9 @@ export default function FrequencyCell({ chore }) {
         updateChore({
             uuid: chore.uuid,
             startAt,
-            ...(!isRepeatChecked ? { endAt } : {}),
-            hasTime: !!startTime,
-            frequency: formatFrequencyForServer({ repeatAmount, repeatType })
-        });
-        
-        console.log('%c 🍤: ', 'font-size:20px;background-color: #B03734;color:#fff;', {
-            uuid: chore.uuid,
-            startAt,
-            ...(!isRepeatChecked ? { endAt } : {}),
-            hasTime: !!startTime,
-            frequency: formatFrequencyForServer({ repeatAmount, repeatType })
+            hasTime: startTime ? true : false,
+            ...(!isRepeatChecked ? { endAt } : { endAt: null }),
+            frequency: isRepeatChecked ? formatFrequencyForServer({ repeatAmount, repeatType }) : ''
         });
         setEditFrequency(!editFrequency);
     };
@@ -77,7 +69,7 @@ export default function FrequencyCell({ chore }) {
         return (
             <TableCell className={classes.borderRight}>
                 <div className={classes.tableContents}>
-                    {formatFrequencyForDisplay(frequency)}
+                    {formatFrequencyForDisplay(chore)}
                     <IconButton onClick={()=>setEditFrequency(!editFrequency)}><EditIcon /></IconButton>
                 </div>
             </TableCell>

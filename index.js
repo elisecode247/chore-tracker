@@ -175,11 +175,13 @@ app.post('/api/v1/chores', verifyToken, async (req, res) => {
 
 app.put('/api/v1/chores', verifyToken, async (req, res) => {
     try {
+        if (!req.body.uuid) {
+            res.send({ success: false, error: 'No chore uuid' });
+        }
         const params = Object.entries(req.body).reduce((acc, param)=> {
             const [paramName, paramValue] = param;
             if (paramName === 'uuid') return acc;
             if (paramName === 'selectedTags') return acc;
-            if ((typeof paramValue !== 'boolean' && !paramValue)) return acc;
             const index = acc.length + 1 || 1;
             return [
                 ...acc,

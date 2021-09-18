@@ -98,7 +98,7 @@ export default function AddChorePanel() {
             description: editor.getHTML(),
             startAt,
             ...(!isRepeatChecked ? { endAt } : {}),
-            hasTime: !!startTime,
+            hasTime: startTime ? true : false,
             frequency: isRepeatChecked ? formatFrequencyForServer({ repeatAmount, repeatType }) : '',
             selectedTags
         });

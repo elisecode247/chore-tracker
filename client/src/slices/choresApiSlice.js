@@ -45,27 +45,27 @@ export const choresApi = createApi({
         updateChore:  builder.mutation({
             query: ({
                 uuid,
-                enabled = null,
-                name = '',
-                description = '',
+                enabled,
+                name,
+                description,
                 startAt = new Date(),
-                endAt = null,
-                hasTime = false,
+                endAt,
+                hasTime,
                 frequency,
-                selectedTags = null
+                selectedTags
             }) => ({
                 url: 'chores',
                 method: 'PUT',
                 body: {
                     uuid,
-                    enabled,
-                    name,
-                    description,
-                    start_at: startAt,
-                    ...(endAt ? { end_at: endAt } : {}),
-                    has_time: hasTime,
-                    frequency,
-                    ...(selectedTags ? { selectedTags: selectedTags.map(t => t.uuid) } : {})
+                    ...(typeof enabled === 'undefined' ? {} : { enabled }),
+                    ...(typeof name === 'undefined' ? {} : { name }),
+                    ...(typeof description === 'undefined' ? {} : { description }),
+                    ...(typeof startAt === 'undefined' ? {} : { start_at: startAt }),
+                    ...(typeof endAt === 'undefined' ? {} : { end_at: endAt }),
+                    ...(typeof hasTime === 'undefined' ? {} : { has_time: hasTime }),
+                    ...(typeof frequency === 'undefined' ? {} : { frequency }),
+                    ...(selectedTags && selectedTags.length ? { selectedTags: selectedTags.map(t => t.uuid) } : {})
                 },
                 validateStatus: (response, result) => {
                     if(!result.success) {

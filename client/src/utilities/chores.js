@@ -311,7 +311,6 @@ export function formatFrequencyForServer({ repeatAmount = 1, repeatType }) {
 }
 
 export function parseRfc2445FrequencyString(frequencyString){
-    console.log('%c 🍱 frequencyString: ', 'font-size:20px;background-color: #FFDD4D;color:#fff;', frequencyString);
     if (!frequencyString) return {};
     return frequencyString.split(';').reduce((obj, attribute) => {
         const [name, value] = attribute.split('=');
@@ -319,18 +318,25 @@ export function parseRfc2445FrequencyString(frequencyString){
     }, {});
 }
 
-export function formatFrequencyForDisplay(frequencyString){
-    const freqObj = parseRfc2445FrequencyString(frequencyString);
-    if (!freqObj.FREQ) return 'As needed';
+export function formatFrequencyForDisplay(chore){
+    const freqObj = parseRfc2445FrequencyString(chore.frequency);
+    if (!freqObj.FREQ) {
+        if(chore.hasTime){
+            return format(new Date(chore.start_at), DATE_AND_TIME_FORMAT);
+        }
+        return format(new Date(chore.start_at), DATE_FORMAT);
+    }
     let frequencyDisplay = '';
     if (!freqObj.INTERVAL) {
         frequencyDisplay = titleCase(freqObj.FREQ);
     } else if (freqObj.FREQ === 'DAILY' && freqObj.INTERVAL !== '1') {
-        return `Every ${freqObj.INTERVAL} ${repeatTypeNoun[freqObj.FREQ]}s`;
+        frequencyDisplay = `Every ${freqObj.INTERVAL} ${repeatTypeNoun[freqObj.FREQ]}s`;
     } else {
         frequencyDisplay = 'WIP';
     }
-
+    if(chore.has_time) {
+        frequencyDisplay += ` at ${format(new Date(chore.start_at), TIME_FORMAT)}`;
+    }
     return frequencyDisplay;
 }
 
