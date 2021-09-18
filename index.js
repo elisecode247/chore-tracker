@@ -98,6 +98,7 @@ app.get('/api/v1/chores', verifyToken, async (req, res) => {
                 c.frequency,
                 c.start_at,
                 c.end_at,
+                c.has_time,
                 (
                     SELECT
                         array_to_json(array_agg(row_to_json(e)))
@@ -144,12 +145,13 @@ app.post('/api/v1/chores', verifyToken, async (req, res) => {
                 description,
                 frequency,
                 start_at,
-                end_at
+                end_at,
+                has_time
             )
-            VALUES ($1, $2, $3, $4, $5, $6)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING id AS chore_id
         ), ins2 AS (
-            SELECT id as tag_id FROM tag WHERE uuid = ANY($7::uuid[])
+            SELECT id as tag_id FROM tag WHERE uuid = ANY($8::uuid[])
         )
             INSERT INTO chore_tag (chore_id, tag_id)
             SELECT chore_id, tag_id
@@ -162,6 +164,7 @@ app.post('/api/v1/chores', verifyToken, async (req, res) => {
             req.body.frequency,
             req.body.start_at,
             req.body.end_at,
+            req.body.has_time,
             req.body.selectedTags
         ]);
         res.send({ success: true });
@@ -219,7 +222,7 @@ app.put('/api/v1/chores', verifyToken, async (req, res) => {
             FROM ins1, ins2
             ON CONFLICT(chore_id, tag_id) DO NOTHING
         `;
-        
+
         const values = [
             ...Object.values(params).map(p => p.paramValue),
             req.body.uuid,

@@ -5,10 +5,6 @@ import 'devextreme/dist/css/dx.material.purple.light.css';
 import '../../../styles/scheduler.css';
 import agendaStatuses from '../../../constants/agendaStatuses';
 import { useUpdateEventMutation } from '../../../slices/eventsApiSlice';
-import format from 'date-fns/format';
-import { TIME_FORMAT } from '../../../constants/dateTimeFormats';
-import ScheduleIcon from '@material-ui/icons/Schedule';
-import EventIcon from '@material-ui/icons/Event';
 const eventStatuses = Object.entries(agendaStatuses).map(([value, name]) => ({ name, value }));
 const today = new Date();
 const views = ['agenda', 'day', 'week', 'workWeek', 'month'];
@@ -24,7 +20,7 @@ export default function EventsList() {
             startDate: new Date(chore.start_at),
             ...(chore.frequency ? {} : { endDate: new Date(chore.end_at) }),
             type: 'chore',
-            allDay: false
+            allDay: !chore.has_time
         };
     });
     // const formattedEvents = events && events.map((event) => {
@@ -57,11 +53,9 @@ export default function EventsList() {
     return (
         <div className="dx-viewport" spacing={1}>
             <Scheduler id="scheduler"
-                adaptivityEnabled={true}
                 cellDuration={60}
                 dataSource={formattedChores}
                 views={views}
-                defaultCurrentView="month"
                 defaultCurrentDate={today}
                 startDayHour={6}
                 editing={true}
@@ -151,9 +145,7 @@ const renderAppointment = (model) => {
     const data = model.appointmentData;
     return (
         <>
-            {data.type === 'chore' ? (<ScheduleIcon />) : (<EventIcon />)}
             <b> {data.name} </b>
-            <i> {format(data.startDate, TIME_FORMAT)}</i>
         </>
     );
 };

@@ -32,7 +32,7 @@ export default function AddChorePanel() {
     const [name, setName] = useState('');
     const [isRepeatChecked, toggleRepeatChecked] = useState(true);
     const [repeatAmount, setRepeatAmount] = useState(1);
-    const [repeatType, setFrequencyType] = useState('DAILY');
+    const [repeatType, setRepeatType] = useState('DAILY');
     const [selectedTags, setSelectedTags] = useState([]);
     const [startDate, setStartDate] = useState(new Date());
     const [startTime, setStartTime] = useState(null);
@@ -62,7 +62,7 @@ export default function AddChorePanel() {
 
     const handleFrequencyTypeChange = (evt) => {
         // const frequencySubTypes = getFrequencySubTypeOptions(evt.target.value);
-        setFrequencyType(evt.target.value);
+        setRepeatType(evt.target.value);
         // if(evt.target.value === 'week') {
         //     setFrequencySubtype([]);
         // } else {
@@ -98,7 +98,8 @@ export default function AddChorePanel() {
             description: editor.getHTML(),
             startAt,
             ...(!isRepeatChecked ? { endAt } : {}),
-            frequency: formatFrequencyForServer({ repeatAmount, repeatType }),
+            hasTime: !!startTime,
+            frequency: isRepeatChecked ? formatFrequencyForServer({ repeatAmount, repeatType }) : '',
             selectedTags
         });
     };

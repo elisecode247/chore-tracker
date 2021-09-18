@@ -29,7 +29,6 @@ import Select from '@material-ui/core/Select';
 import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
 import FrequencyCell from './FrequencyCell';
-import UndoIcon from '@material-ui/icons/Undo';
 
 export default function Row({ chore, tags }) {
     const [updateChore, { isLoading: isUpdateChoreLoading }] = useUpdateChoreMutation();
@@ -37,9 +36,7 @@ export default function Row({ chore, tags }) {
     const [editName, setEditName] = useState(false);
     const [editTags, setEditTags] = useState(false);
     const [name, setName] = useState(chore.name);
-    const [location, setLocation] = useState(chore.location);
-    const [reason, setReason] = useState(chore.reason);
-    const [selectedTagUuids, setSelectedTags] = useState(chore.tags.map(t => t.uuid) || []);
+    const [selectedTagUuids, setSelectedTags] = useState((chore.tags && chore.tags.map(t => t.uuid)) || []);
     const selectedTags = selectedTagUuids.reduce((acc, uuid) => {
         const selectedTag = tags && tags.length && tags.find(t => t.uuid === uuid);
         if (!selectedTag) {
@@ -88,20 +85,6 @@ export default function Row({ chore, tags }) {
         setEditName(!editName);
     };
 
-    const handleReasonSaveClick = () => {
-        updateChore({
-            uuid: chore.uuid,
-            reason
-        });
-    };
-
-    const handleLocationSaveClick = () => {
-        updateChore({
-            uuid: chore.uuid,
-            location
-        });
-    };
-
     const handleDescriptionSaveClick = () => {
         updateChore({
             uuid: chore.uuid,
@@ -112,6 +95,7 @@ export default function Row({ chore, tags }) {
     if (isUpdateChoreLoading) {
         return (<>Loading...</>);
     }
+
     return [
         <TableRow key={0} className={classes.root}>
             <TableCell className={classes.borderRight}>
@@ -213,34 +197,6 @@ export default function Row({ chore, tags }) {
                         </Typography>
                         <EditorContent className={classes.entryContainer} editor={editor} id={`chore-description-${chore.uuid}`} />
                         <TipTapMenu editor={editor} />
-                        <Typography className={classes.h4} variant="h6" component="h4">
-                            Why It's Important
-                        </Typography>
-                        <Typography variant="subtitle1">
-                            What are the positive consequences of completing this? What are the negative consequences for not completing or delaying?
-                        </Typography>
-                        <TextField
-                            label="Reasons"
-                            id={`chore-reason-input-${chore.reason}`}
-                            onChange={evt => setReason(evt.target.value)}
-                            style={{ width: '100%', maxWidth: '700px' }}
-                            multiline
-                            value={reason}
-                        />
-                        <IconButton onClick={() => setReason(chore.reason)}><UndoIcon /></IconButton>
-                        <IconButton onClick={handleReasonSaveClick}><SaveIcon /></IconButton>
-                        <Typography className={classes.h4} variant="h6" component="h4">
-                            Location
-                        </Typography>
-                        <TextField
-                            label="Location"
-                            id={`chore-location-input-${chore.location}`}
-                            onChange={evt => setLocation(evt.target.value)}
-                            style={{ width: '100%', maxWidth: '700px' }}
-                            value={location}
-                        />
-                        <IconButton onClick={() => setLocation(chore.location)}><UndoIcon /></IconButton>
-                        <IconButton onClick={handleLocationSaveClick}><SaveIcon /></IconButton>
                         <Typography className={classes.h4} variant="h6" component="h4">
                             Most Recent History
                         </Typography>

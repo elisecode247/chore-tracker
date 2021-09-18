@@ -11,7 +11,6 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import ChoreListRow from './ChoreListRow';
-import { formatChores } from '../../../utilities/chores';
 import { choresListStyles as useStyles } from './styles';
 import ChoresListTagFilterHead from './ChoresListTagFilterHead';
 
@@ -19,7 +18,6 @@ export default function ChoresList() {
     const classes = useStyles();
     const { data: tags } = useGetTagsQuery();
     const { data: chores, error, isLoading } = useGetChoresQuery();
-    const formattedChores = Object.values(formatChores(chores));
     const [selectedTags, setSelectedTags] = useState((
         localStorage.getItem('choresListSelectedTags') && JSON.parse(localStorage.getItem('choresListSelectedTags'))) || []
     );
@@ -51,7 +49,7 @@ export default function ChoresList() {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {formattedChores.filter(row => {
+                        {chores.filter(row => {
                             let matchesAllTags = true;
                             if (selectedTags.length) {
                                 if(!row.tags.length) {

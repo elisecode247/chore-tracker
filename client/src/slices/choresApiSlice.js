@@ -18,6 +18,7 @@ export const choresApi = createApi({
                 description = '',
                 startAt = new Date(),
                 endAt = null,
+                hasTime = false,
                 frequency,
                 selectedTags = []
             }) => ({
@@ -28,6 +29,7 @@ export const choresApi = createApi({
                     description,
                     start_at: startAt,
                     end_at: endAt,
+                    has_time: hasTime,
                     frequency,
                     selectedTags
                 },
@@ -46,12 +48,10 @@ export const choresApi = createApi({
                 enabled = null,
                 name = '',
                 description = '',
-                isFrequencyChecked = null,
-                scheduledAt = '',
-                hasTime = null,
-                frequencyAmount = 0,
-                frequencyType = '',
-                frequencySubtype = '',
+                startAt = new Date(),
+                endAt = null,
+                hasTime = false,
+                frequency,
                 selectedTags = null
             }) => ({
                 url: 'chores',
@@ -61,13 +61,10 @@ export const choresApi = createApi({
                     enabled,
                     name,
                     description,
-                    scheduled_at: scheduledAt,
+                    start_at: startAt,
+                    ...(endAt ? { end_at: endAt } : {}),
                     has_time: hasTime,
-                    frequency: frequencyAmount ? JSON.stringify({
-                        repeatType: isFrequencyChecked ? frequencyType : 'once',
-                        repeatAmount: frequencyAmount || 0,
-                        repeatSubtype: frequencySubtype || ''
-                    }) : null,
+                    frequency,
                     ...(selectedTags ? { selectedTags: selectedTags.map(t => t.uuid) } : {})
                 },
                 validateStatus: (response, result) => {

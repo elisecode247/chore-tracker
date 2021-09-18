@@ -239,9 +239,9 @@ export function formatChores(chores) {
     if (!chores || !chores.length) return [];
     return chores
         .reduce((choreObject, chore, _index) => {
-            const parsedFrequency = parseFrequency(chore.frequency);
+            const freqObj = parseFrequency(chore.frequency);
             const lastCompletedDate = getLastCompletedDate(chore.history) || null;
-            const dueDate = calculateDueDate(parsedFrequency, lastCompletedDate, chore);
+            const dueDate = calculateDueDate(freqObj, lastCompletedDate, chore);
             const formattedDueDate = formatDueDate(dueDate, chore);
             return {
                 ...choreObject,
@@ -256,7 +256,7 @@ export function formatChores(chores) {
                     formattedDueDate,
                     scheduledAt: chore.scheduled_at,
                     hasTime: !!(chore.has_time),
-                    parsedFrequency,
+                    freqObj,
                     formattedFrequency: formatFrequency(chore),
                     location: chore.location,
                     reason: chore.reason || '',
@@ -272,9 +272,9 @@ export function formatEvents(events) {
     if (!events || !events.length) return [];
     return events
         .reduce((eventsObject, event, index) => {
-            const parsedFrequency = parseFrequency(event.frequency);
+            const freqObj = parseFrequency(event.frequency);
             const lastCompletedDate = (event.completed_at && new Date(event.completed_at)) || null;
-            const dueDate = calculateDueDate(parsedFrequency, lastCompletedDate, event) || null;
+            const dueDate = calculateDueDate(freqObj, lastCompletedDate, event) || null;
 
             return {
                 ...eventsObject,
@@ -300,9 +300,42 @@ export function formatEvents(events) {
 }
 
 export function formatFrequencyForServer({ repeatAmount = 1, repeatType }) {
-    if (!repeatType) return '';
-    if (!['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'].includes(repeatType)) return '';
-    return `FREQ=${repeatType};INTERVAL=${repeatAmount};`;
+    let frequencyString = '';
+    if (!repeatType) return frequencyString;
+    if (!['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'].includes(repeatType)) return frequencyString;
+    frequencyString += `FREQ=${repeatType};`;
+    if(repeatAmount > 1) {
+        frequencyString += `INTERVAL=${repeatAmount};`;
+    }
+    return frequencyString;
+}
+
+export function parseRfc2445FrequencyString(frequencyString){
+    console.log('%c 🍱 frequencyString: ', 'font-size:20px;background-color: #FFDD4D;color:#fff;', frequencyString);
+    if (!frequencyString) return {};
+    return frequencyString.split(';').reduce((obj, attribute) => {
+        const [name, value] = attribute.split('=');
+        return { ...obj, [name]: value };
+    }, {});
+}
+
+export function formatFrequencyForDisplay(frequencyString){
+    const freqObj = parseRfc2445FrequencyString(frequencyString);
+    if (!freqObj.FREQ) return 'As needed';
+    let frequencyDisplay = '';
+    if (!freqObj.INTERVAL) {
+        frequencyDisplay = titleCase(freqObj.FREQ);
+    } else if (freqObj.FREQ === 'DAILY' && freqObj.INTERVAL !== '1') {
+        return `Every ${freqObj.INTERVAL} ${repeatTypeNoun[freqObj.FREQ]}s`;
+    } else {
+        frequencyDisplay = 'WIP';
+    }
+
+    return frequencyDisplay;
+}
+
+function titleCase(string){
+    return string[0].toUpperCase() + string.slice(1).toLowerCase();
 }
 
 export const repeatTypeNoun = {
