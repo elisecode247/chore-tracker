@@ -65,7 +65,7 @@ export const choresApi = createApi({
                     ...(typeof endAt === 'undefined' ? {} : { end_at: endAt }),
                     ...(typeof hasTime === 'undefined' ? {} : { has_time: hasTime }),
                     ...(typeof frequency === 'undefined' ? {} : { frequency }),
-                    ...(selectedTags && selectedTags.length ? { selectedTags: selectedTags.map(t => t.uuid) } : {})
+                    ...(typeof selectedTags === 'undefined' ? {} : { selectedTags: selectedTags.map(t => t.uuid) })
                 },
                 validateStatus: (response, result) => {
                     if(!result.success) {

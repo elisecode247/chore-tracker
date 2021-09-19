@@ -201,7 +201,7 @@ app.put('/api/v1/chores', verifyToken, async (req, res) => {
                 RETURNING id as chore_id
             )
             DELETE FROM chore_tag USING ins1 WHERE chore_tag.chore_id = ins1.chore_id
-        ` : !req.body.selectedTags ? `
+        ` : typeof req.body.selectedTags === 'undefined' ? `
             UPDATE chore as c
                 SET
                     ${params.map(p => `${p.paramName} = ${p.paramKey}`).join(', ')}
@@ -217,14 +217,15 @@ app.put('/api/v1/chores', verifyToken, async (req, res) => {
             ), ins2 AS (
                 SELECT tag.id as tag_id FROM tag WHERE uuid = ANY($${params.length + 2}::uuid[])
             ), ins3 AS (
-                DELETE FROM chore_tag USING ins1 WHERE chore_tag.chore_id = ins1.chore_id
+                INSERT INTO chore_tag (chore_id, tag_id)
+                SELECT chore_id, tag_id
+                FROM ins1, ins2
+                ON CONFLICT(chore_id, tag_id) DO NOTHING
             )
-            INSERT INTO chore_tag (chore_id, tag_id)
-            SELECT chore_id, tag_id
-            FROM ins1, ins2
-            ON CONFLICT(chore_id, tag_id) DO NOTHING
+            DELETE FROM chore_tag USING ins1
+            WHERE chore_tag.chore_id = ins1.chore_id
+            AND NOT (chore_tag.tag_id = ANY (SELECT tag_id FROM ins2))
         `;
-
         const values = [
             ...Object.values(params).map(p => p.paramValue),
             req.body.uuid,
