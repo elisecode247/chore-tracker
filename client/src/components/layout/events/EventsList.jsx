@@ -14,9 +14,9 @@ import set from 'date-fns/set';
 import getDate from 'date-fns/getDate';
 import getMonth from 'date-fns/getMonth';
 import getYear from 'date-fns/getYear';
+import differenceInMinutes from 'date-fns/differenceInMinutes';
 import { TIME_FORMAT } from '../../../constants/dateTimeFormats';
 const eventStatuses = Object.entries(agendaStatuses).map(([value, name]) => ({ name, value }));
-//const views = ['agenda', 'day', 'week', 'month'];
 const today = new Date();
 const todayYear = getYear(today);
 const todayMonth = getMonth(today);
@@ -35,6 +35,7 @@ export default function EventsList() {
     const savedSkippedChoresToday = localStorage.getItem('agendaSkippedChoresToday') && JSON.parse(localStorage.getItem('agendaSkippedChoresToday'));
     const [skippedChoresToday, setSkippedChoresToday] = useState(savedSkippedChoresToday || []);
     const [addEvent] = useAddEventMutation();
+    const [updateEvent] = useUpdateEventMutation();
     const { data: chores } = useGetChoresQuery();
     const { data: events } = useGetAllEventsQuery();
     const schedulerRef = useRef(null);
@@ -53,13 +54,14 @@ export default function EventsList() {
     });
 
     const formattedEvents = events && events.map((event) => {
-        
+        const startDate = event.started_at ? new Date(event.started_at) : subMinutes(new Date(event.completed_at), 30);
+        const endDate = event.completed_at ? new Date(event.completed_at) : addMinutes(new Date(event.started_at), 30);
         return {
             ...event,
             text: event.name,
             type: 'event',
-            startDate: !event.started_at ? subMinutes(new Date(event.completed_at), 30) : new Date(event.started_at),
-            endDate: !event.completed_at ? addMinutes(new Date(event.started_at), 30) : new Date(event.completed_at),
+            startDate: Math.abs(differenceInMinutes(startDate, endDate)) < 30 ? subMinutes(new Date(event.completed_at), 30) : startDate,
+            endDate,
             allDay: false
         };
     });
@@ -67,7 +69,6 @@ export default function EventsList() {
         ...(formattedEvents ? formattedEvents : []),
         ...(formattedChores ? formattedChores : [])
     ];
-    const [updateEvent] = useUpdateEventMutation();
 
     const handleAppointmentUpdated = function (schedulerEvent) {
         const data = schedulerEvent.appointmentData;
@@ -117,27 +118,30 @@ export default function EventsList() {
                 startDayHour={6}
                 onAppointmentFormOpening={handleAppointmentFormOpening}
                 onAppointmentUpdated={handleAppointmentUpdated}
-                appointmentRender={renderAppointment}
                 appointmentTooltipRender={handleOnAppointmentTooltipRender}
                 useDropDownViewSwitcher={false}
                 recurrenceRuleExpr="rule"
                 recurrenceExceptionExpr="exception"
             >
                 <View
+                    appointmentRender={renderAgendaAppointment}
                     name="agenda"
                     type="agenda"
                 />
                 <View
+                    appointmentRender={renderAppointment}
                     name="day"
                     type="day"
                     groups={['type']}
                     groupOrientation="horizontal"
                 />
                 <View
+                    appointmentRender={renderAppointment}
                     name="week"
                     type="week"
                 />
                 <View
+                    appointmentRender={renderAppointment}
                     name="month"
                     type="month"
                 />
@@ -228,6 +232,7 @@ const renderAppointment = (model) => {
         return (
             <>
                 <b> {data.text} </b>
+                <i style={{ padding: '0 0.5rem 0 0.5rem' }}> {data.has_time ? format(new Date(data.start_at), TIME_FORMAT) : 'any time' }</i>
             </>
         );
     }
@@ -235,7 +240,29 @@ const renderAppointment = (model) => {
         return (
             <>
                 <b> {data.text} </b>
-                <i> {format(new Date(data.completed_at), TIME_FORMAT)}</i>
+                <i style={{ padding: '0 0.5rem 0 0.5rem' }}>{format(new Date(data.completed_at), TIME_FORMAT) }</i>
+                <i> {data.status} </i>
+            </>
+        );
+    }
+};
+
+const renderAgendaAppointment = (model) => {
+    const data = model.appointmentData;
+    if (data.type === 'chore') {
+        return (
+            <>
+                <b style={{ color: '#cc5c53' }}> {data.text} </b>
+                <i style={{ padding: '0 0.5rem 0 0.5rem' }}> {data.has_time ? format(new Date(data.start_at), TIME_FORMAT) : 'any time' }</i>
+            </>
+        );
+    }
+    if (data.type === 'event') {
+        return (
+            <>
+                <b style={{ color: '#ff9747' }}> {data.text} </b>
+                <i style={{ padding: '0 0.5rem 0 0.5rem' }}>{format(new Date(data.completed_at), TIME_FORMAT) }</i>
+                <i> {data.status} </i>
             </>
         );
     }

@@ -44,7 +44,8 @@ export default function AppointmentTooltip({
                 <div style={{ textAlign: 'center' }}>
                     <small>Event</small>
                     <h1>{appointmentData.text}</h1>
-                    <p>{format(new Date(appointmentData.completed_at), DATE_AND_TIME_FORMAT)}</p>
+                    <p>Start: {appointmentData.started_at ? format(new Date(appointmentData.started_at), DATE_AND_TIME_FORMAT) : ''}</p>
+                    <p>Completed: {appointmentData.completed_at ? format(new Date(appointmentData.completed_at), DATE_AND_TIME_FORMAT) : ''}</p>
                     <p>{appointmentData.status}</p>
 
                 </div>
