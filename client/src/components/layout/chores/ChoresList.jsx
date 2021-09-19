@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGetTagsQuery } from '../../../slices/tagsApiSlice';
 import { useGetChoresQuery } from '../../../slices/choresApiSlice';
 import AppBar from '@material-ui/core/AppBar';
@@ -17,10 +17,17 @@ import ChoresListTagFilterHead from './ChoresListTagFilterHead';
 export default function ChoresList() {
     const classes = useStyles();
     const { data: tags } = useGetTagsQuery();
-    const { data: chores, error, isLoading } = useGetChoresQuery();
+    const { data: choresFromServer, error, isLoading } = useGetChoresQuery();
     const [selectedTags, setSelectedTags] = useState((
         localStorage.getItem('choresListSelectedTags') && JSON.parse(localStorage.getItem('choresListSelectedTags'))) || []
     );
+    const [chores, setChores] = useState(filterChoresBySelectedTags(choresFromServer, selectedTags));
+
+    useEffect(() => {
+        if (choresFromServer) {
+            setChores(filterChoresBySelectedTags(choresFromServer, selectedTags));
+        }
+    }, [choresFromServer, selectedTags, tags]);
 
     if (error) {
         return (<div>Error</div>);
@@ -49,25 +56,31 @@ export default function ChoresList() {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {chores.filter(row => {
-                            let matchesAllTags = true;
-                            if (selectedTags.length) {
-                                if(!row.tags.length) {
-                                    matchesAllTags = false;
-                                } else {
-                                    const itemTags = row.tags.map(t => t.uuid);
-                                    selectedTags.forEach(t => {
-                                        if (!itemTags.includes(t)) {
-                                            matchesAllTags = false;
-                                        }
-                                    });
-                                }
-                            }
-                            return matchesAllTags;
-                        }).map((chore, idx)=>(<ChoreListRow key={idx} chore={chore} tags={tags} />))}
+                        {chores.map((chore)=>(<ChoreListRow key={chore.uuid} chore={chore} tags={tags} />))}
                     </TableBody>
                 </Table>
             </TableContainer>
         </div>
     );
+}
+
+function filterChoresBySelectedTags(chores, selectedTags) {
+    if (!chores) return [];
+    if (!selectedTags || (selectedTags && !selectedTags.length)) return chores;
+    const filteredChores = chores.filter(row => {
+        let matchesAllTags = true;
+        if(row.tags && !row.tags.length) {
+            matchesAllTags = false;
+        } else {
+            const itemTags = (row.tags && row.tags.map(t => t.uuid)) || [];
+            selectedTags.forEach(t => {
+                if (!itemTags.includes(t)) {
+                    matchesAllTags = false;
+                }
+            });
+        }
+        return matchesAllTags;
+    });
+
+    return filteredChores;
 }
