@@ -1,10 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { useGetChoresQuery } from '../../../slices/choresApiSlice';
-import Scheduler, { Resource } from 'devextreme-react/scheduler';
+import Scheduler, { Resource, View } from 'devextreme-react/scheduler';
 import 'devextreme/dist/css/dx.material.purple.light.css';
 import '../../../styles/scheduler.css';
 import agendaStatuses from '../../../constants/agendaStatuses';
-import { useGetAllEventsQuery, useUpdateEventMutation } from '../../../slices/eventsApiSlice';
+import { useGetAllEventsQuery, useAddEventMutation, useUpdateEventMutation } from '../../../slices/eventsApiSlice';
 import AppointmentTooltipLayout from './AppointmentTooltipLayout';
 import subMinutes from 'date-fns/subMinutes';
 import addMinutes from 'date-fns/addMinutes';
@@ -14,8 +14,9 @@ import set from 'date-fns/set';
 import getDate from 'date-fns/getDate';
 import getMonth from 'date-fns/getMonth';
 import getYear from 'date-fns/getYear';
+import { TIME_FORMAT } from '../../../constants/dateTimeFormats';
 const eventStatuses = Object.entries(agendaStatuses).map(([value, name]) => ({ name, value }));
-const views = ['agenda', 'day', 'week', 'month'];
+//const views = ['agenda', 'day', 'week', 'month'];
 const today = new Date();
 const todayYear = getYear(today);
 const todayMonth = getMonth(today);
@@ -33,6 +34,7 @@ export default function EventsList() {
     const [today] = useState(getToday());
     const savedSkippedChoresToday = localStorage.getItem('agendaSkippedChoresToday') && JSON.parse(localStorage.getItem('agendaSkippedChoresToday'));
     const [skippedChoresToday, setSkippedChoresToday] = useState(savedSkippedChoresToday || []);
+    const [addEvent] = useAddEventMutation();
     const { data: chores } = useGetChoresQuery();
     const { data: events } = useGetAllEventsQuery();
     const schedulerRef = useRef(null);
@@ -51,6 +53,7 @@ export default function EventsList() {
     });
 
     const formattedEvents = events && events.map((event) => {
+        
         return {
             ...event,
             text: event.name,
@@ -71,7 +74,7 @@ export default function EventsList() {
         updateEvent({
             uuid: data.uuid,
             status: data.status,
-            ...(data.updatedStartedAt ? { startedAt: data.updatedStartedAt } : {}),
+            ...(data.updatedStartDate ? { startedAt: data.updatedStartDate } : {}),
             ...(data.updatedEndDate ? { completedAt: data.updatedEndDate } : {}),
             notes: data.notes
         });
@@ -83,10 +86,20 @@ export default function EventsList() {
         schedulerRef.current.instance.hideAppointmentTooltip();
     };
 
+    const handleChoreDone = function(choreUuid) {
+        addEvent({
+            choreUuid,
+            status: 'done',
+            completedAt: new Date()
+        });
+        schedulerRef.current.instance.hideAppointmentTooltip();
+    };
+
     const handleOnAppointmentTooltipRender = (e) => {
         return (
             <AppointmentTooltipLayout
                 onIgnoreChoreClick={handleChoreSkip}
+                onChoreDown={handleChoreDone}
                 appointmentData={e.appointmentData}
             />);
     };
@@ -97,7 +110,6 @@ export default function EventsList() {
                 ref={schedulerRef}
                 cellDuration={30}
                 dataSource={allItems}
-                views={views}
                 defaultCurrentDate={today}
                 defaultCurrentView="agenda"
                 forceIsoDateParsing="false"
@@ -111,6 +123,24 @@ export default function EventsList() {
                 recurrenceRuleExpr="rule"
                 recurrenceExceptionExpr="exception"
             >
+                <View
+                    name="agenda"
+                    type="agenda"
+                />
+                <View
+                    name="day"
+                    type="day"
+                    groups={['type']}
+                    groupOrientation="horizontal"
+                />
+                <View
+                    name="week"
+                    type="week"
+                />
+                <View
+                    name="month"
+                    type="month"
+                />
                 <Resource
                     dataSource={[
                         {
@@ -194,10 +224,20 @@ const handleAppointmentFormOpening = function (schedulerEvent) {
 
 const renderAppointment = (model) => {
     const data = model.appointmentData;
-    return (
-        <>
-            <b> {data.text} </b>
-        </>
-    );
+    if (data.type === 'chore') {
+        return (
+            <>
+                <b> {data.text} </b>
+            </>
+        );
+    }
+    if (data.type === 'event') {
+        return (
+            <>
+                <b> {data.text} </b>
+                <i> {format(new Date(data.completed_at), TIME_FORMAT)}</i>
+            </>
+        );
+    }
 };
 

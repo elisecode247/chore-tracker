@@ -5,3 +5,10 @@
 .dx-scheduler-appointment-content {
     width: inherit;
 }
+
+.dx-popup-wrapper.dx-scheduler-appointment-tooltip-wrapper .dx-popup-content .dx-list-item,
+.dx-scheduler-overlay-panel .dx-popup-content .dx-list-item {
+  width: 75vw;
+  text-align: left;
+  padding: 1rem;
+}
