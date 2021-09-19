@@ -1,42 +1,69 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { useGetChoresQuery } from '../../../slices/choresApiSlice';
 import Scheduler, { Resource } from 'devextreme-react/scheduler';
 import 'devextreme/dist/css/dx.material.purple.light.css';
 import '../../../styles/scheduler.css';
 import agendaStatuses from '../../../constants/agendaStatuses';
-import { useUpdateEventMutation } from '../../../slices/eventsApiSlice';
+import { useGetAllEventsQuery, useUpdateEventMutation } from '../../../slices/eventsApiSlice';
+import AppointmentTooltipLayout from './AppointmentTooltipLayout';
+import subMinutes from 'date-fns/subMinutes';
+import addMinutes from 'date-fns/addMinutes';
+import isToday from 'date-fns/isToday';
+import format from 'date-fns/format';
+import set from 'date-fns/set';
+import getDate from 'date-fns/getDate';
+import getMonth from 'date-fns/getMonth';
+import getYear from 'date-fns/getYear';
 const eventStatuses = Object.entries(agendaStatuses).map(([value, name]) => ({ name, value }));
-const today = new Date();
 const views = ['agenda', 'day', 'week', 'month'];
+const today = new Date();
+const todayYear = getYear(today);
+const todayMonth = getMonth(today);
+const todayDate = getDate(today);
 
+const getToday = () => {
+    const savedDate = localStorage.getItem('agendaCurrentDate');
+    if(!isToday(new Date(savedDate))) {
+        localStorage.setItem('agendaCurrentDate', new Date());
+        localStorage.setItem('agendaSkippedChoresToday', []);
+    }
+    return today;
+};
 export default function EventsList() {
+    const [today] = useState(getToday());
+    const savedSkippedChoresToday = localStorage.getItem('agendaSkippedChoresToday') && JSON.parse(localStorage.getItem('agendaSkippedChoresToday'));
+    const [skippedChoresToday, setSkippedChoresToday] = useState(savedSkippedChoresToday || []);
     const { data: chores } = useGetChoresQuery();
-    // const { data: events } = useGetAllEventsQuery();
+    const { data: events } = useGetAllEventsQuery();
+    const schedulerRef = useRef(null);
     const formattedChores = chores && chores.map((chore) => {
+        const startDate = new Date(chore.start_at);
         return {
             ...chore,
             text: chore.name,
             rule: chore.frequency,
-            startDate: new Date(chore.start_at),
+            exception: skippedChoresToday.includes(chore.uuid) ? format(set(startDate, { year: todayYear, month: todayMonth, date: todayDate }), `yyyyMMdd${'\'T\''}HHmmss`) : '',
+            startDate,
             ...(chore.frequency ? {} : { endDate: new Date(chore.end_at) }),
             type: 'chore',
             allDay: !chore.has_time
         };
     });
-    // const formattedEvents = events && events.map((event) => {
-    //     return {
-    //         ...event,
-    //         text: event.name,
-    //         type: 'event',
-    //         startDate: !event.started_at ? subMinutes(new Date(event.completed_at), 30) : new Date(event.started_at),
-    //         endDate: !event.completed_at ? addMinutes(new Date(event.started_at), 30) : new Date(event.completed_at),
-    //         allDay: false
-    //     };
-    // });
-    // const allItems = [
-    //     ...(formattedEvents ? formattedEvents : []),
-    //     ...(formattedChores ? formattedChores : []),
-    // ];
+
+    const formattedEvents = events && events.map((event) => {
+        return {
+            ...event,
+            text: event.name,
+            type: 'event',
+            startDate: !event.started_at ? subMinutes(new Date(event.completed_at), 30) : new Date(event.started_at),
+            endDate: !event.completed_at ? addMinutes(new Date(event.started_at), 30) : new Date(event.completed_at),
+            allDay: false
+        };
+    });
+    const allItems = [
+        ...(formattedEvents ? formattedEvents : []),
+        ...(formattedChores ? formattedChores : [])
+    ];
     const [updateEvent] = useUpdateEventMutation();
 
     const handleAppointmentUpdated = function (schedulerEvent) {
@@ -50,21 +77,39 @@ export default function EventsList() {
         });
     };
 
+    const handleChoreSkip = function(choreUuid) {
+        setSkippedChoresToday([...skippedChoresToday, choreUuid]);
+        localStorage.setItem('agendaSkippedChoresToday', JSON.stringify([...skippedChoresToday, choreUuid]));
+        schedulerRef.current.instance.hideAppointmentTooltip();
+    };
+
+    const handleOnAppointmentTooltipRender = (e) => {
+        return (
+            <AppointmentTooltipLayout
+                onIgnoreChoreClick={handleChoreSkip}
+                appointmentData={e.appointmentData}
+            />);
+    };
+
     return (
         <div className="dx-viewport" spacing={1}>
             <Scheduler id="scheduler"
+                ref={schedulerRef}
                 cellDuration={30}
-                dataSource={formattedChores}
+                dataSource={allItems}
                 views={views}
                 defaultCurrentDate={today}
-                defaultCurrentView="month"
+                defaultCurrentView="agenda"
+                forceIsoDateParsing="false"
                 height={600}
                 startDayHour={6}
                 onAppointmentFormOpening={handleAppointmentFormOpening}
                 onAppointmentUpdated={handleAppointmentUpdated}
                 appointmentRender={renderAppointment}
-                recurrenceRuleExpr="rule"
+                appointmentTooltipRender={handleOnAppointmentTooltipRender}
                 useDropDownViewSwitcher={false}
+                recurrenceRuleExpr="rule"
+                recurrenceExceptionExpr="exception"
             >
                 <Resource
                     dataSource={[
@@ -95,6 +140,11 @@ const handleAppointmentFormOpening = function (schedulerEvent) {
         schedulerEvent.appointmentData.text :
         'Create a new event'
     );
+
+    if (schedulerEvent.appointmentData.type === 'chore') {
+        schedulerEvent.cancel = true;
+        return;
+    }
 
     // TODO add event form
     form.itemOption('mainGroup','items', [
@@ -146,7 +196,7 @@ const renderAppointment = (model) => {
     const data = model.appointmentData;
     return (
         <>
-            <b> {data.name} </b>
+            <b> {data.text} </b>
         </>
     );
 };
