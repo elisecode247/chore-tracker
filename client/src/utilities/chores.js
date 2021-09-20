@@ -26,16 +26,27 @@ import { endOfMonth } from 'date-fns';
 
 function getDayOfWeekLabel(d) {
     switch (parseInt(d)) {
-    case 0: return 'Sunday';
-    case 1: return 'Monday';
-    case 2: return 'Tuesday';
-    case 3: return 'Wednesday';
-    case 4: return 'Thursday';
-    case 5: return 'Friday';
-    case 6: return 'Saturday';
-    default: return '';
+        case 0: return 'Sunday';
+        case 1: return 'Monday';
+        case 2: return 'Tuesday';
+        case 3: return 'Wednesday';
+        case 4: return 'Thursday';
+        case 5: return 'Friday';
+        case 6: return 'Saturday';
+        default: return '';
     }
 }
+
+const weekdayAbbreviations = {
+    SU: 'Sun',
+    MO: 'Mon',
+    TU: 'Tues',
+    WE: 'Wed',
+    TH: 'Thurs',
+    FR: 'Fri',
+    SA: 'Sat'
+};
+
 function parseFrequency(frequency) {
     if (!frequency) return null;
     try {
@@ -299,18 +310,25 @@ export function formatEvents(events) {
         }, {});
 }
 
-export function formatFrequencyForServer({ repeatAmount = 1, repeatType }) {
+export function formatFrequencyForServer({
+    repeatAmount = 1,
+    repeatType,
+    selectedWeekdays = []
+}) {
     let frequencyString = '';
     if (!repeatType) return frequencyString;
     if (!['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'].includes(repeatType)) return frequencyString;
     frequencyString += `FREQ=${repeatType}`;
-    if(repeatAmount > 1) {
+    if (repeatAmount > 1) {
         frequencyString += `;INTERVAL=${repeatAmount}`;
+    }
+    if (repeatType === 'WEEKLY' && selectedWeekdays.length) {
+        frequencyString += `;BYDAY=${selectedWeekdays.join(',')}`;
     }
     return frequencyString;
 }
 
-export function parseRfc2445FrequencyString(frequencyString){
+export function parseRfc2445FrequencyString(frequencyString) {
     if (!frequencyString) return {};
     return frequencyString.split(';').reduce((obj, attribute) => {
         const [name, value] = attribute.split('=');
@@ -318,29 +336,40 @@ export function parseRfc2445FrequencyString(frequencyString){
     }, {});
 }
 
-export function formatFrequencyForDisplay(chore){
+export function formatFrequencyForDisplay(chore) {
+    const startAt = new Date(chore.start_at);
     const freqObj = parseRfc2445FrequencyString(chore.frequency);
     if (!freqObj.FREQ) {
-        if(chore.hasTime){
-            return format(new Date(chore.start_at), DATE_AND_TIME_FORMAT);
+        if (chore.hasTime) {
+            return format(startAt, DATE_AND_TIME_FORMAT);
         }
-        return format(new Date(chore.start_at), DATE_FORMAT);
+        return format(startAt, DATE_FORMAT);
     }
     let frequencyDisplay = '';
     if (!freqObj.INTERVAL) {
         frequencyDisplay = titleCase(freqObj.FREQ);
-    } else if (freqObj.FREQ === 'DAILY' && freqObj.INTERVAL !== '1') {
+    } else if (['DAILY', 'WEEKLY'].includes(freqObj.FREQ) && freqObj.INTERVAL !== '1') {
         frequencyDisplay = `Every ${freqObj.INTERVAL} ${repeatTypeNoun[freqObj.FREQ]}s`;
     } else {
         frequencyDisplay = 'WIP';
     }
-    if(chore.has_time) {
-        frequencyDisplay += ` at ${format(new Date(chore.start_at), TIME_FORMAT)}`;
+    if (freqObj.FREQ === 'WEEKLY' && !freqObj.BYDAY) {
+        frequencyDisplay += ` on ${getDayOfWeekLabel(getDay(startAt))}`;
+    }
+    if (freqObj.FREQ === 'WEEKLY' && freqObj.BYDAY) {
+        frequencyDisplay += ` on ${freqObj.BYDAY.split(',').map(day => weekdayAbbreviations[day]).join(', ')}`;
+    }
+    if (chore.has_time) {
+        if (chore.end_at) {
+            frequencyDisplay += ` from ${format(startAt, TIME_FORMAT)} to ${format(new Date(chore.end_at), TIME_FORMAT)}`;
+        } else {
+            frequencyDisplay += ` at ${format(startAt, TIME_FORMAT)}`;
+        }
     }
     return frequencyDisplay;
 }
 
-function titleCase(string){
+function titleCase(string) {
     return string[0].toUpperCase() + string.slice(1).toLowerCase();
 }
 

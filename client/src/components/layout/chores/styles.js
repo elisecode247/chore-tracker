@@ -41,6 +41,20 @@ export const addChorePanelStyles = makeStyles((theme) => ({
         display: 'block',
         margin: '1rem 0 1rem 0'
     },
+    weekdaysContainer: {
+        display: 'flex',
+        flexDirection: 'row',
+        '&> label': {
+            margin: 0,
+            padding: 4,
+            borderBottom: '1px solid grey',
+            borderTop: '1px solid grey',
+            borderLeft: '1px solid grey'
+        },
+        '&> label:last-child': {
+            borderRight: '1px solid grey'
+        }
+    }
 }));
 
 export const choresListStyles = makeStyles((theme) => ({
@@ -108,6 +122,20 @@ export const choresListRowStyles = makeStyles({
     },
     h4: {
         marginTop: '2rem'
+    },
+    weekdaysContainer: {
+        display: 'flex',
+        flexDirection: 'row',
+        '&> label': {
+            margin: 0,
+            padding: 4,
+            borderBottom: '1px solid grey',
+            borderTop: '1px solid grey',
+            borderLeft: '1px solid grey'
+        },
+        '&> label:last-child': {
+            borderRight: '1px solid grey'
+        }
     }
 });
 

@@ -24,7 +24,7 @@ const todayDate = getDate(today);
 
 const getToday = () => {
     const savedDate = localStorage.getItem('agendaCurrentDate');
-    if(!isToday(new Date(savedDate))) {
+    if (!isToday(new Date(savedDate))) {
         localStorage.setItem('agendaCurrentDate', new Date());
         localStorage.setItem('agendaSkippedChoresToday', []);
     }
@@ -47,7 +47,7 @@ export default function EventsList() {
             rule: chore.frequency,
             exception: skippedChoresToday.includes(chore.uuid) ? format(set(startDate, { year: todayYear, month: todayMonth, date: todayDate }), `yyyyMMdd${'\'T\''}HHmmss`) : '',
             startDate,
-            ...(chore.frequency ? {} : { endDate: new Date(chore.end_at) }),
+            ...(!chore.end_at ? {} : { endDate: new Date(chore.end_at) }),
             type: 'chore',
             allDay: !chore.has_time
         };
@@ -81,13 +81,13 @@ export default function EventsList() {
         });
     };
 
-    const handleChoreSkip = function(choreUuid) {
+    const handleChoreSkip = function (choreUuid) {
         setSkippedChoresToday([...skippedChoresToday, choreUuid]);
         localStorage.setItem('agendaSkippedChoresToday', JSON.stringify([...skippedChoresToday, choreUuid]));
         schedulerRef.current.instance.hideAppointmentTooltip();
     };
 
-    const handleChoreDone = function(choreUuid) {
+    const handleChoreDone = function (choreUuid) {
         addEvent({
             choreUuid,
             status: 'done',
@@ -181,7 +181,7 @@ const handleAppointmentFormOpening = function (schedulerEvent) {
     }
 
     // TODO add event form
-    form.itemOption('mainGroup','items', [
+    form.itemOption('mainGroup', 'items', [
         {
             dataField: 'started_at',
             editorType: 'dxDateBox',
@@ -211,7 +211,7 @@ const handleAppointmentFormOpening = function (schedulerEvent) {
             editorOptions: {
                 value: schedulerEvent.appointmentData.status,
                 dataSource: eventStatuses,
-                valueExpr:'value',
+                valueExpr: 'value',
                 displayExpr: 'name'
             }
         },
@@ -232,7 +232,10 @@ const renderAppointment = (model) => {
         return (
             <>
                 <b> {data.text} </b>
-                <i style={{ padding: '0 0.5rem 0 0.5rem' }}> {data.has_time ? format(new Date(data.start_at), TIME_FORMAT) : 'any time' }</i>
+                <i style={{ padding: '0 0.5rem 0 0.5rem' }}>
+                    {data.has_time ? format(new Date(data.start_at), TIME_FORMAT) : 'any time'}
+                    {data.end_at ? (<> to {format(new Date(data.end_at), TIME_FORMAT)}</>) : null}
+                </i>
             </>
         );
     }
@@ -240,7 +243,7 @@ const renderAppointment = (model) => {
         return (
             <>
                 <b> {data.text} </b>
-                <i style={{ padding: '0 0.5rem 0 0.5rem' }}>{format(new Date(data.completed_at), TIME_FORMAT) }</i>
+                <i style={{ padding: '0 0.5rem 0 0.5rem' }}>{format(new Date(data.completed_at), TIME_FORMAT)}</i>
                 <i> {data.status} </i>
             </>
         );
@@ -253,7 +256,10 @@ const renderAgendaAppointment = (model) => {
         return (
             <>
                 <b style={{ color: '#cc5c53' }}> {data.text} </b>
-                <i style={{ padding: '0 0.5rem 0 0.5rem' }}> {data.has_time ? format(new Date(data.start_at), TIME_FORMAT) : 'any time' }</i>
+                <i style={{ padding: '0 0.5rem 0 0.5rem' }}>
+                    {data.has_time ? format(new Date(data.start_at), TIME_FORMAT) : 'any time'}
+                    {data.end_at ? (<> to {format(new Date(data.end_at), TIME_FORMAT)}</>) : null}
+                </i>
             </>
         );
     }
@@ -261,7 +267,7 @@ const renderAgendaAppointment = (model) => {
         return (
             <>
                 <b style={{ color: '#ff9747' }}> {data.text} </b>
-                <i style={{ padding: '0 0.5rem 0 0.5rem' }}>{format(new Date(data.completed_at), TIME_FORMAT) }</i>
+                <i style={{ padding: '0 0.5rem 0 0.5rem' }}>{format(new Date(data.completed_at), TIME_FORMAT)}</i>
                 <i> {data.status} </i>
             </>
         );

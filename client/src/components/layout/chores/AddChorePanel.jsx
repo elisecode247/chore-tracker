@@ -9,7 +9,7 @@ import { defaultDescription } from '../../../constants/defaultValues';
 import formatScheduledAt from '../../../utilities/formatScheduledAt';
 import Button from '@material-ui/core/Button';
 import Chip from '@material-ui/core/Chip';
-import Container from '@material-ui/core/Container';
+import ButtonGroup from '@material-ui/core/ButtonGroup';
 import FormControl from '@material-ui/core/FormControl';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Input from '@material-ui/core/Input';
@@ -23,6 +23,8 @@ import Typography from '@material-ui/core/Typography';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import TipTapMenu from '../../TipTapMenu';
+import FormGroup from '@material-ui/core/FormGroup';
+import Checkbox from '@material-ui/core/Checkbox';
 
 export default function AddChorePanel() {
     const { data: tags, error: errorTags, isLoading: isLoadingTags } = useGetTagsQuery();
@@ -38,6 +40,8 @@ export default function AddChorePanel() {
     const [startTime, setStartTime] = useState(null);
     const [endDate, setEndDate] = useState(new Date());
     const [endTime, setEndTime] = useState(null);
+    const [selectedWeekdays, setSelectedWeekdays] = useState([]);
+
     const editor = useEditor({
         extensions: [
             StarterKit,
@@ -50,7 +54,7 @@ export default function AddChorePanel() {
         content: defaultDescription
     });
 
-    useEffect(()=> {
+    useEffect(() => {
         if (editor && !editor.isDestroyed) {
             editor.commands.setContent(settings?.choreSettings?.choreTemplate || defaultDescription);
         }
@@ -61,25 +65,9 @@ export default function AddChorePanel() {
     };
 
     const handleFrequencyTypeChange = (evt) => {
-        // const frequencySubTypes = getFrequencySubTypeOptions(evt.target.value);
         setRepeatType(evt.target.value);
-        // if(evt.target.value === 'week') {
-        //     setFrequencySubtype([]);
-        // } else {
-        //     setFrequencySubtype(frequencySubTypes.length ? frequencySubTypes[0].value : '');
-        // }
-        // setFrequencySubtypes(frequencySubTypes);
     };
 
-    // const handleSubtypeWeekChange = (event) => {
-    //     const daysOfWeek = event.target.checked ? [...frequencySubtype, event.target.name] :
-    //         frequencySubtype.filter(name => (event.target.name !== name));
-    //     setFrequencySubtype(daysOfWeek);
-    // };
-
-    // const handleFrequencySubtypeChange = (evt) => {
-    //     setFrequencySubtype(evt.target.value);
-    // };
 
     const handleRepeatCheck = () => {
         toggleRepeatChecked(!isRepeatChecked);
@@ -88,6 +76,15 @@ export default function AddChorePanel() {
     const handleSelectedTagsChange = (event) => {
         const { value } = event.target;
         setSelectedTags(value);
+    };
+
+    const handleWeekdayChange = function (evt) {
+        const selectedWeekday = evt.target.name;
+        if (selectedWeekdays.includes(selectedWeekday)) {
+            setSelectedWeekdays(selectedWeekdays.filter(day => day !== selectedWeekday));
+        } else {
+            setSelectedWeekdays([...selectedWeekdays, selectedWeekday]);
+        }
     };
 
     const handleSubmit = () => {
@@ -99,7 +96,11 @@ export default function AddChorePanel() {
             startAt,
             ...(!isRepeatChecked ? { endAt } : {}),
             hasTime: startTime ? true : false,
-            frequency: isRepeatChecked ? formatFrequencyForServer({ repeatAmount, repeatType }) : '',
+            frequency: isRepeatChecked ? formatFrequencyForServer({
+                repeatAmount,
+                repeatType,
+                selectedWeekdays
+            }) : '',
             selectedTags
         });
     };
@@ -114,7 +115,7 @@ export default function AddChorePanel() {
                 Add New Chore
             </Typography>
             <form id="add-chore-form">
-                <TextField id="add-chore-name-input" fullWidth label="What" onChange={(evt)=>setName(evt.target.value)} required type="text" />
+                <TextField id="add-chore-name-input" fullWidth label="What" onChange={(evt) => setName(evt.target.value)} required type="text" />
                 <EditorContent className={classes.entryContainer} editor={editor} id="add-chore-description-input" />
                 <TipTapMenu editor={editor} />
                 <div>
@@ -147,38 +148,36 @@ export default function AddChorePanel() {
                         />
                     </FormControl>
                 </div>
-                {!isRepeatChecked ? (
-                    <div>
-                        <FormControl className={`${classes.formControl} ${classes.inlineBlock}`} >
-                            <KeyboardDatePicker
-                                disableToolbar
-                                variant="inline"
-                                format="MM/dd/yyyy"
-                                margin="normal"
-                                id="end-chore-date-local"
-                                label="End Date (Optional)"
-                                value={endDate}
-                                onChange={setEndDate}
-                                KeyboardButtonProps={{
-                                    'aria-label': 'change end date',
-                                }}
-                            />
-                        </FormControl>
-                        <FormControl className={`${classes.formControl} ${classes.inlineBlock}`} >
-                            <KeyboardTimePicker
-                                margin="normal"
-                                id="end-chore-time-local"
-                                label="End Time (Optional)"
-                                value={endTime}
-                                onChange={setEndTime}
-                                KeyboardButtonProps={{
-                                    'aria-label': 'change end time',
-                                }}
-                                variant="inline"
-                            />
-                        </FormControl>
-                    </div>
-                ) : null}
+                <div>
+                    <FormControl className={`${classes.formControl} ${classes.inlineBlock}`} >
+                        <KeyboardDatePicker
+                            disableToolbar
+                            variant="inline"
+                            format="MM/dd/yyyy"
+                            margin="normal"
+                            id="end-chore-date-local"
+                            label="End Date (Optional)"
+                            value={endDate}
+                            onChange={setEndDate}
+                            KeyboardButtonProps={{
+                                'aria-label': 'change end date',
+                            }}
+                        />
+                    </FormControl>
+                    <FormControl className={`${classes.formControl} ${classes.inlineBlock}`} >
+                        <KeyboardTimePicker
+                            margin="normal"
+                            id="end-chore-time-local"
+                            label="End Time (Optional)"
+                            value={endTime}
+                            onChange={setEndTime}
+                            KeyboardButtonProps={{
+                                'aria-label': 'change end time',
+                            }}
+                            variant="inline"
+                        />
+                    </FormControl>
+                </div>
                 <FormControlLabel
                     className={classes.switchFormControl}
                     control={<Switch checked={isRepeatChecked} onChange={handleRepeatCheck} aria-label="repeat switch" />}
@@ -209,36 +208,19 @@ export default function AddChorePanel() {
                             />
                             <p>{repeatTypeNoun[repeatType]}(s)</p>
                         </FormControl>
-                        {/* {frequencySubTypes.length ? (repeatType === 'week' ? (
-                            <>
-                                <div className={classes.and}> and </div>
-                                {frequencySubTypes.map((subtype, idx) => {
-                                    return (
-                                        <FormControlLabel
-                                            key={idx} 
-                                            control={<Checkbox name={subtype.value} />}
-                                            label={subtype.label}
-                                            onChange={handleSubtypeWeekChange}
-                                        />
-                                    );
-                                })}
-                            </>
-                        ) : (frequencySubTypes.length ? (
-                            <>
-                                <span className={classes.and}> and </span>
-                                <InputLabel className={classes.tagLabel} id="frequency-subtype-select-label">On</InputLabel>
-                                <Select
-                                    labelId="frequency-subtype-select-label"
-                                    id="frequency-subtype-select"
-                                    value={frequencySubtype}
-                                    onChange={handleFrequencySubtypeChange}
-                                >
-                                    {frequencySubTypes.map((subtype, idx) => {
-                                        return (<MenuItem key={idx} value={subtype.value}>{subtype.label}</MenuItem>);
-                                    })}
-                                </Select>
-                            </>
-                        ) : null)) : null} */}
+                        {repeatType === 'WEEKLY' ?
+                            (
+                                <FormGroup className={classes.weekdaysContainer}>
+                                    <FormControlLabel control={<Checkbox checked={selectedWeekdays.includes('SU')} onChange={handleWeekdayChange} name="SU" />} label="Sun" labelPlacement="top" />
+                                    <FormControlLabel control={<Checkbox checked={selectedWeekdays.includes('MO')} onChange={handleWeekdayChange} name="MO" />} label="Mon" labelPlacement="top" />
+                                    <FormControlLabel control={<Checkbox checked={selectedWeekdays.includes('TU')} onChange={handleWeekdayChange} name="TU" />} label="Tue" labelPlacement="top" />
+                                    <FormControlLabel control={<Checkbox checked={selectedWeekdays.includes('WE')} onChange={handleWeekdayChange} name="WE" />} label="Wed" labelPlacement="top" />
+                                    <FormControlLabel control={<Checkbox checked={selectedWeekdays.includes('TH')} onChange={handleWeekdayChange} name="TH" />} label="Thu" labelPlacement="top" />
+                                    <FormControlLabel control={<Checkbox checked={selectedWeekdays.includes('FR')} onChange={handleWeekdayChange} name="FR" />} label="Fri" labelPlacement="top" />
+                                    <FormControlLabel control={<Checkbox checked={selectedWeekdays.includes('SA')} onChange={handleWeekdayChange} name="SA" />} label="Sat" labelPlacement="top" />
+                                </FormGroup>
+                            ) : null
+                        }
                     </div>
                 ) : null}
                 {isLoadingTags ? (<div>Loading Tags...</div>) : ((tags && tags.length) || !errorTags ? (
@@ -275,15 +257,19 @@ export default function AddChorePanel() {
                         </Select>
                     </FormControl>
                 ) : null)}
-                <Container className={classes.buttonContainer}>
+                <ButtonGroup>
                     <Button variant="contained" color="primary" onClick={handleSubmit}> Submit </Button>
-                    {isError ? (
-                        <div>An unknown error occurred.</div>
-                    ): null}
-                    {isSuccess ? (
-                        <div>Chore Added</div>
-                    ): null}
-                </Container>
+                    {isError ?
+                        (
+                            <div>An unknown error occurred.</div>
+                        ) : null
+                    }
+                    {isSuccess ?
+                        (
+                            <div>Chore Added</div>
+                        ) : null
+                    }
+                </ButtonGroup>
             </form>
         </div>
     );
