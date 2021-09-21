@@ -10,7 +10,9 @@ import ButtonGroup from '@material-ui/core/ButtonGroup';
 export default function AppointmentTooltip({
     appointmentData,
     onIgnoreChoreClick,
-    onChoreDown
+    onChoreDone,
+    onChoreStart,
+    onEventDone
 }) {
 
     const handleIgnoreChore = function(evt){
@@ -18,9 +20,19 @@ export default function AppointmentTooltip({
         onIgnoreChoreClick(appointmentData.uuid);
     };
 
+    const handleEventMarkDone = function(evt){
+        evt.stopPropagation();
+        onEventDone(appointmentData.uuid);
+    };
+
     const handleMarkDone = function(evt){
         evt.stopPropagation();
-        onChoreDown(appointmentData.uuid);
+        onChoreDone(appointmentData.uuid);
+    };
+
+    const handleMarkStart = function(evt){
+        evt.stopPropagation();
+        onChoreStart(appointmentData.uuid);
     };
 
     if (appointmentData.type === 'chore') {
@@ -32,6 +44,7 @@ export default function AppointmentTooltip({
                     <p>{format(new Date(appointmentData.start_at), appointmentData.has_time ? DATE_AND_TIME_FORMAT : DATE_FORMAT)}</p>
                     <ButtonGroup>
                         <Button onClick={handleIgnoreChore} variant="outlined">Skip Today</Button>
+                        <Button onClick={handleMarkStart} variant="outlined">Start Chore</Button>
                         <Button onClick={handleMarkDone} variant="outlined">Mark Done</Button>
                     </ButtonGroup>
                 </div>
@@ -47,7 +60,9 @@ export default function AppointmentTooltip({
                     <p>Start: {appointmentData.started_at ? format(new Date(appointmentData.started_at), DATE_AND_TIME_FORMAT) : ''}</p>
                     <p>Completed: {appointmentData.completed_at ? format(new Date(appointmentData.completed_at), DATE_AND_TIME_FORMAT) : ''}</p>
                     <p>{appointmentData.status}</p>
-
+                    <ButtonGroup>
+                        <Button onClick={handleEventMarkDone} variant="outlined">Mark Done</Button>
+                    </ButtonGroup>
                 </div>
                 <p>{ReactHtmlParser(appointmentData.description)}</p>
             </div>

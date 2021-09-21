@@ -38,12 +38,9 @@ export default function EventsList() {
     const [updateEvent] = useUpdateEventMutation();
     const { data: chores } = useGetChoresQuery();
     const { data: events } = useGetAllEventsQuery();
-    console.log('%c 🥘 events: ', 'font-size:20px;background-color: #EA7E5C;color:#fff;', events);
     const schedulerRef = useRef(null);
     const formattedChores = chores && chores.map((chore) => {
-        console.log('%c 🍣 chore: ', 'font-size:20px;background-color: #E41A6A;color:#fff;', chore.name);
         const startDate = new Date(chore.start_at);
-        console.log('%c 🍻 getSkippedChoresToday({ chore, events, skippedChoresToday }): ', 'font-size:20px;background-color: #2EAFB0;color:#fff;', getSkippedChoresToday({ chore, events, skippedChoresToday }));
         return {
             ...chore,
             text: chore.name,
@@ -99,11 +96,31 @@ export default function EventsList() {
         schedulerRef.current.instance.hideAppointmentTooltip();
     };
 
+    const handleChoreStart = function (choreUuid) {
+        addEvent({
+            choreUuid,
+            status: 'progress',
+            startedAt: new Date()
+        });
+        schedulerRef.current.instance.hideAppointmentTooltip();
+    };
+
+    const handleEventDone = function (eventUuid) {
+        updateEvent({
+            uuid: eventUuid,
+            status: 'done',
+            completedAt: new Date(),
+        });
+        schedulerRef.current.instance.hideAppointmentTooltip();
+    };
+
     const handleOnAppointmentTooltipRender = (e) => {
         return (
             <AppointmentTooltipLayout
                 onIgnoreChoreClick={handleChoreSkip}
-                onChoreDown={handleChoreDone}
+                onChoreDone={handleChoreDone}
+                onChoreStart={handleChoreStart}
+                onEventDone={handleEventDone}
                 appointmentData={e.appointmentData}
             />);
     };
@@ -241,7 +258,8 @@ const renderAppointment = (model) => {
         return (
             <>
                 <b> {data.text} </b>
-                <i style={{ padding: '0 0.5rem 0 0.5rem' }}>{format(new Date(data.completed_at), TIME_FORMAT)}</i>
+                {data.started_at ? (<i style={{ padding: '0 0.5rem 0 0.5rem' }}>{format(data.startDate, TIME_FORMAT)}</i>) : null}
+                {data.completed_at ? (<i style={{ padding: '0 0.5rem 0 0.5rem' }}>{format(data.endDate, TIME_FORMAT)}</i>) : null}
                 <i> {data.status} </i>
             </>
         );

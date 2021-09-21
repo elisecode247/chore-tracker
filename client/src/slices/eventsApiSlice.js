@@ -44,6 +44,12 @@ export const eventsApi = createApi({
                     ...(startedAt ? { started_at: startedAt } : {}),
                     ...(completedAt ? { completed_at: completedAt } : {}),
                 },
+                validateStatus: (response, result) => {
+                    if(!result.success) {
+                        return false;
+                    }
+                    return response.status === 200 && result.success;
+                }
             }),
             invalidatesTags: ['events']
 

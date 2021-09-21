@@ -354,23 +354,27 @@ app.put('/api/v1/events', verifyToken, async (req, res) => {
 
 app.post('/api/v1/events', verifyToken, async (req, res) => {
     try {
+        const isStartIncluded = req.body.started_at;
         const queryString = `
             INSERT INTO "event" (
                 chore_id,
                 status,
-                completed_at,
+                ${isStartIncluded ? 'started_at,' : ''}
+                ${req.body.completed_at ? 'completed_at,' : ''}
                 completed_by
             )
             SELECT
                 c.id as chore_id,
                 $1 as status,
-                $2 as completed_at,
-                $3 as completed_by
-            FROM (SELECT id FROM chore WHERE uuid = $4) c
+                ${isStartIncluded ? '$2 as started_at,' : ''}
+                ${req.body.completed_at ? (isStartIncluded ? '$3 as completed_at,' : '$2 as completed_at,') : ''}
+                ${req.body.completed_at ? (isStartIncluded ? '$4' : '$3') : (isStartIncluded ? '$3' : '$2')} as completed_by
+            FROM (SELECT id FROM chore WHERE uuid = ${req.body.completed_at ? (isStartIncluded ? '$5' : '$4') : (isStartIncluded ? '$4' : '$3')}) c
         `;
         await database.query(queryString, [
             req.body.status,
-            req.body.completed_at,
+            ...(req.body.started_at ? [req.body.started_at] : []),
+            ...(req.body.completed_at ? [req.body.completed_at] : []),
             req.user.id,
             req.body.choreUuid
         ]);
@@ -389,7 +393,6 @@ app.delete('/api/v1/events', verifyToken, async (req, res) => {
         await database.query(queryString, [req.body.uuid]);
         res.send({ success: true });
     } catch (err) {
-        console.error(err);
         res.send({ success: false, error: err });
     }
 });
