@@ -40,7 +40,8 @@ export const choresApi = createApi({
                     }
                     return response.status === 200 && result.success;
                 }
-            })
+            }),
+            invalidatesTags: ['chores']
         }),
         updateChore:  builder.mutation({
             query: ({
@@ -48,7 +49,7 @@ export const choresApi = createApi({
                 enabled,
                 name,
                 description,
-                startAt = new Date(),
+                startAt,
                 endAt,
                 hasTime,
                 frequency,

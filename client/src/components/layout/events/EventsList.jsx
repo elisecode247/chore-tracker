@@ -38,14 +38,17 @@ export default function EventsList() {
     const [updateEvent] = useUpdateEventMutation();
     const { data: chores } = useGetChoresQuery();
     const { data: events } = useGetAllEventsQuery();
+    console.log('%c 🥘 events: ', 'font-size:20px;background-color: #EA7E5C;color:#fff;', events);
     const schedulerRef = useRef(null);
     const formattedChores = chores && chores.map((chore) => {
+        console.log('%c 🍣 chore: ', 'font-size:20px;background-color: #E41A6A;color:#fff;', chore.name);
         const startDate = new Date(chore.start_at);
+        console.log('%c 🍻 getSkippedChoresToday({ chore, events, skippedChoresToday }): ', 'font-size:20px;background-color: #2EAFB0;color:#fff;', getSkippedChoresToday({ chore, events, skippedChoresToday }));
         return {
             ...chore,
             text: chore.name,
             rule: chore.frequency,
-            exception: skippedChoresToday.includes(chore.uuid) ? format(set(startDate, { year: todayYear, month: todayMonth, date: todayDate }), `yyyyMMdd${'\'T\''}HHmmss`) : '',
+            exception: getSkippedChoresToday({ chore, events, skippedChoresToday }),
             startDate,
             ...(!chore.end_at ? {} : { endDate: new Date(chore.end_at) }),
             type: 'chore',
@@ -112,7 +115,7 @@ export default function EventsList() {
                 cellDuration={30}
                 dataSource={allItems}
                 defaultCurrentDate={today}
-                defaultCurrentView="agenda"
+                defaultCurrentView="day"
                 forceIsoDateParsing="false"
                 height={600}
                 startDayHour={6}
@@ -123,11 +126,6 @@ export default function EventsList() {
                 recurrenceRuleExpr="rule"
                 recurrenceExceptionExpr="exception"
             >
-                <View
-                    appointmentRender={renderAgendaAppointment}
-                    name="agenda"
-                    type="agenda"
-                />
                 <View
                     appointmentRender={renderAppointment}
                     name="day"
@@ -250,27 +248,8 @@ const renderAppointment = (model) => {
     }
 };
 
-const renderAgendaAppointment = (model) => {
-    const data = model.appointmentData;
-    if (data.type === 'chore') {
-        return (
-            <>
-                <b style={{ color: '#cc5c53' }}> {data.text} </b>
-                <i style={{ padding: '0 0.5rem 0 0.5rem' }}>
-                    {data.has_time ? format(new Date(data.start_at), TIME_FORMAT) : 'any time'}
-                    {data.end_at ? (<> to {format(new Date(data.end_at), TIME_FORMAT)}</>) : null}
-                </i>
-            </>
-        );
-    }
-    if (data.type === 'event') {
-        return (
-            <>
-                <b style={{ color: '#ff9747' }}> {data.text} </b>
-                <i style={{ padding: '0 0.5rem 0 0.5rem' }}>{format(new Date(data.completed_at), TIME_FORMAT)}</i>
-                <i> {data.status} </i>
-            </>
-        );
-    }
+const getSkippedChoresToday = function ({ chore, events, skippedChoresToday }) {
+    return skippedChoresToday.includes(chore.uuid) || (events && events.find(event => event.chore_uuid === chore.uuid && event.status === 'done' && isToday(new Date(event.completed_at)))) ?
+        format(set(new Date(chore.start_at), { year: todayYear, month: todayMonth, date: todayDate }), `yyyyMMdd${'\'T\''}HHmmss`)
+        : '';
 };
-

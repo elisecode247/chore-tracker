@@ -35,7 +35,7 @@ export default function AppointmentTooltip({
                         <Button onClick={handleMarkDone} variant="outlined">Mark Done</Button>
                     </ButtonGroup>
                 </div>
-                <p>{ReactHtmlParser(appointmentData.description)}</p>
+                <div>{ReactHtmlParser(appointmentData.description)}</div>
             </div>
         );
     } else {
