@@ -61,11 +61,12 @@ export default function FrequencyCell({ chore }) {
     const handleFrequencySaveClick = () => {
         const startAt = formatScheduledAt(startDate, startTime);
         const endAt = endDate && formatScheduledAt(endDate, endTime);
+        console.log('%c 🍺 endAt: ', 'font-size:20px;background-color: #E41A6A;color:#fff;', endAt);
 
         updateChore({
             uuid: chore.uuid,
             startAt,
-            hasTime: startTime ? true : false,
+            hasTime: endTime ? true : false,
             ...(!endAt ? {} : { endAt }),
             frequency: isRepeatChecked ? formatFrequencyForServer({ repeatAmount, repeatType, selectedWeekdays }) : ''
         });
