@@ -258,8 +258,8 @@ const renderAppointment = (model) => {
         return (
             <>
                 <b> {data.text} </b>
-                {data.started_at ? (<i style={{ padding: '0 0.5rem 0 0.5rem' }}>{format(data.startDate, TIME_FORMAT)}</i>) : null}
-                {data.completed_at ? (<i style={{ padding: '0 0.5rem 0 0.5rem' }}>{format(data.endDate, TIME_FORMAT)}</i>) : null}
+                {data.started_at ? (<i style={{ padding: '0 0.5rem 0 0.5rem' }}>{format(new Date(data.started_at), TIME_FORMAT)}</i>) : null}
+                {data.completed_at ? (<i style={{ padding: '0 0.5rem 0 0.5rem' }}>{format(new Date(data.completed_at), TIME_FORMAT)}</i>) : null}
                 <i> {data.status} </i>
             </>
         );
