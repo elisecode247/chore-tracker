@@ -42,7 +42,7 @@ export default function AppointmentTooltip({
                     <small>Chore</small>
                     <h1>{appointmentData.text}</h1>
                     <p>{format(new Date(appointmentData.start_at), appointmentData.has_time ? DATE_AND_TIME_FORMAT : DATE_FORMAT)}</p>
-                    <ButtonGroup>
+                    <ButtonGroup style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
                         <Button onClick={handleIgnoreChore} variant="outlined">Skip Today</Button>
                         <Button onClick={handleMarkStart} variant="outlined">Start Chore</Button>
                         <Button onClick={handleMarkDone} variant="outlined">Mark Done</Button>
