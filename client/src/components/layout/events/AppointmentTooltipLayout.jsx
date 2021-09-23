@@ -10,7 +10,8 @@ import ButtonGroup from '@material-ui/core/ButtonGroup';
 export default function AppointmentTooltip({
     appointmentData,
     onIgnoreChoreClick,
-    onChoreDone,
+    onChoreDoneScheduled,
+    onChoreDoneNow,
     onChoreStart,
     onEventDone
 }) {
@@ -20,17 +21,22 @@ export default function AppointmentTooltip({
         onIgnoreChoreClick(appointmentData.uuid);
     };
 
-    const handleEventMarkDone = function(evt){
+    const handleMarkEventDone = function(evt){
         evt.stopPropagation();
         onEventDone(appointmentData.uuid);
     };
 
-    const handleMarkDone = function(evt){
+    const handleMarkChoreDoneScheduled = function(evt){
         evt.stopPropagation();
-        onChoreDone(appointmentData.uuid);
+        onChoreDoneScheduled(appointmentData);
     };
 
-    const handleMarkStart = function(evt){
+    const handleMarkChoreDoneNow = function(evt){
+        evt.stopPropagation();
+        onChoreDoneNow(appointmentData.uuid);
+    };
+
+    const handleChoreMarkStart = function(evt){
         evt.stopPropagation();
         onChoreStart(appointmentData.uuid);
     };
@@ -44,8 +50,9 @@ export default function AppointmentTooltip({
                     <p>{format(new Date(appointmentData.start_at), appointmentData.has_time ? DATE_AND_TIME_FORMAT : DATE_FORMAT)}</p>
                     <ButtonGroup style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
                         <Button onClick={handleIgnoreChore} variant="outlined">Skip Today</Button>
-                        <Button onClick={handleMarkStart} variant="outlined">Start Chore</Button>
-                        <Button onClick={handleMarkDone} variant="outlined">Mark Done</Button>
+                        <Button onClick={handleChoreMarkStart} variant="outlined">Start Chore</Button>
+                        <Button onClick={handleMarkChoreDoneScheduled} variant="outlined">Mark Done Scheduled</Button>
+                        <Button onClick={handleMarkChoreDoneNow} variant="outlined">Mark Done Now</Button>
                     </ButtonGroup>
                 </div>
                 <div>{ReactHtmlParser(appointmentData.description)}</div>
@@ -61,7 +68,7 @@ export default function AppointmentTooltip({
                     <p>Completed: {appointmentData.completed_at ? format(new Date(appointmentData.completed_at), DATE_AND_TIME_FORMAT) : ''}</p>
                     <p>{appointmentData.status}</p>
                     <ButtonGroup>
-                        <Button onClick={handleEventMarkDone} variant="outlined">Mark Done</Button>
+                        <Button onClick={handleMarkEventDone} variant="outlined">Mark Done</Button>
                     </ButtonGroup>
                 </div>
                 <p>{ReactHtmlParser(appointmentData.description)}</p>

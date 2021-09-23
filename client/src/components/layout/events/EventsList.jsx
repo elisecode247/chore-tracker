@@ -45,7 +45,7 @@ export default function EventsList() {
             ...chore,
             text: chore.name,
             rule: chore.frequency,
-            exception: getSkippedChoresToday({ chore, events, skippedChoresToday }),
+            exception: setExceptionDate({ chore, events, skippedChoresToday }),
             startDate,
             ...(!chore.end_at ? {} : { endDate: new Date(chore.end_at) }),
             type: 'chore',
@@ -87,11 +87,23 @@ export default function EventsList() {
         schedulerRef.current.instance.hideAppointmentTooltip();
     };
 
-    const handleChoreDone = function (choreUuid) {
+    const handleChoreDoneNow = function (choreUuid) {
         addEvent({
             choreUuid,
             status: 'done',
             completedAt: new Date()
+        });
+        schedulerRef.current.instance.hideAppointmentTooltip();
+    };
+
+    const handleChoreDoneScheduled = function (chore) {
+        addEvent({
+            choreUuid: chore.uuid,
+            status: 'done',
+            completedAt: chore.has_time ? chore.end_at ?
+                set(new Date(chore.end_at), { year: todayYear, month: todayMonth, date: todayDate }) :
+                set(new Date(chore.start_at), { year: todayYear, month: todayMonth, date: todayDate }) :
+                new Date()
         });
         schedulerRef.current.instance.hideAppointmentTooltip();
     };
@@ -118,7 +130,8 @@ export default function EventsList() {
         return (
             <AppointmentTooltipLayout
                 onIgnoreChoreClick={handleChoreSkip}
-                onChoreDone={handleChoreDone}
+                onChoreDoneNow={handleChoreDoneNow}
+                onChoreDoneScheduled={handleChoreDoneScheduled}
                 onChoreStart={handleChoreStart}
                 onEventDone={handleEventDone}
                 appointmentData={e.appointmentData}
@@ -248,8 +261,8 @@ const renderAppointment = (model) => {
             <>
                 <b> {data.text} </b>
                 <i style={{ padding: '0 0.5rem 0 0.5rem' }}>
-                    {data.has_time ? format(new Date(data.start_at), TIME_FORMAT) : 'any time'}
-                    {data.end_at ? (<> to {format(new Date(data.end_at), TIME_FORMAT)}</>) : null}
+                    {data.has_time && data.start_at ? format(new Date(data.start_at), TIME_FORMAT) : 'any time'}
+                    {data.has_time && data.end_at ? (<> to {format(new Date(data.end_at), TIME_FORMAT)}</>) : null}
                 </i>
             </>
         );
@@ -266,7 +279,7 @@ const renderAppointment = (model) => {
     }
 };
 
-const getSkippedChoresToday = function ({ chore, events, skippedChoresToday }) {
+const setExceptionDate = function ({ chore, events, skippedChoresToday }) {
     const skippedEvent = events && events.find(event => {
         if (event.chore_uuid !== chore.uuid) {
             return false;
