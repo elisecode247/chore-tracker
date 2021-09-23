@@ -267,7 +267,16 @@ const renderAppointment = (model) => {
 };
 
 const getSkippedChoresToday = function ({ chore, events, skippedChoresToday }) {
-    return skippedChoresToday.includes(chore.uuid) || (events && events.find(event => event.chore_uuid === chore.uuid && event.status === 'done' && isToday(new Date(event.completed_at)))) ?
+    const skippedEvent = events && events.find(event => {
+        if (event.chore_uuid !== chore.uuid) {
+            return false;
+        }
+        if (event.status !== 'done') {
+            return isToday(new Date(event.started_at));
+        }
+        return isToday(new Date(event.completed_at));
+    });
+    return (skippedChoresToday.includes(chore.uuid) || skippedEvent) ?
         format(set(new Date(chore.start_at), { year: todayYear, month: todayMonth, date: todayDate }), `yyyyMMdd${'\'T\''}HHmmss`)
         : '';
 };
