@@ -144,6 +144,7 @@ export default function EventsList() {
                 onChoreStart={handleChoreStart}
                 onEventDone={handleEventDone}
                 appointmentData={e.appointmentData}
+                schedulerRef={schedulerRef}
             />);
     };
 
@@ -161,6 +162,11 @@ export default function EventsList() {
                 onAppointmentFormOpening={handleAppointmentFormOpening.bind(null, chores)}
                 onAppointmentUpdated={handleAppointmentUpdated}
                 appointmentTooltipRender={handleOnAppointmentTooltipRender}
+                onAppointmentDblClick={(schedulerEvent) => {
+                    if (schedulerEvent.appointmentData.type === 'chore') {
+                        schedulerEvent.cancel = true;
+                    }
+                }}
                 onCellClick={(e)=> {
                     if(e.cellData.groups.type === 'event') {
                         schedulerRef.current.instance.showAppointmentPopup(e.cellData);

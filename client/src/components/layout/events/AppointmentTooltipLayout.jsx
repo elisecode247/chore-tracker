@@ -13,7 +13,8 @@ export default function AppointmentTooltip({
     onChoreDoneScheduled,
     onChoreDoneNow,
     onChoreStart,
-    onEventDone
+    onEventDone,
+    schedulerRef
 }) {
 
     const handleIgnoreChore = function(evt){
@@ -41,9 +42,15 @@ export default function AppointmentTooltip({
         onChoreStart(appointmentData.uuid);
     };
 
+    const handleModalClick = function(evt){
+        evt.stopPropagation();
+        schedulerRef.current.instance.hideAppointmentTooltip();
+        schedulerRef.current.instance.hideAppointmentPopup();
+    };
+
     if (appointmentData.type === 'chore') {
         return (
-            <div>
+            <div onClick={handleModalClick}>
                 <div style={{ textAlign: 'center' }}>
                     <small>Chore</small>
                     <h1>{appointmentData.text}</h1>
