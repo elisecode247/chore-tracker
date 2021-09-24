@@ -72,13 +72,22 @@ export default function EventsList() {
 
     const handleAppointmentUpdated = function (schedulerEvent) {
         const data = schedulerEvent.appointmentData;
-        updateEvent({
-            uuid: data.uuid,
-            status: data.status,
-            ...(data.updatedStartDate ? { startedAt: data.updatedStartDate } : {}),
-            ...(data.updatedEndDate ? { completedAt: data.updatedEndDate } : {}),
-            notes: data.notes
-        });
+        if(data.isAddForm) {
+            addEvent({
+                choreUuid: data.chore_uuid,
+                status: data.status,
+                ...(data.startDate ? { startedAt: data.startDate } : {}),
+                ...(data.endDate ? { completedAt: data.endDate } : {})
+            });
+        } else {
+            updateEvent({
+                uuid: data.uuid,
+                status: data.status,
+                ...(data.updatedStartDate ? { startedAt: data.updatedStartDate } : {}),
+                ...(data.updatedEndDate ? { completedAt: data.updatedEndDate } : {}),
+                notes: data.notes
+            });
+        }
     };
 
     const handleChoreSkip = function (choreUuid) {
@@ -149,9 +158,14 @@ export default function EventsList() {
                 forceIsoDateParsing="false"
                 height={600}
                 startDayHour={6}
-                onAppointmentFormOpening={handleAppointmentFormOpening}
+                onAppointmentFormOpening={handleAppointmentFormOpening.bind(null, chores)}
                 onAppointmentUpdated={handleAppointmentUpdated}
                 appointmentTooltipRender={handleOnAppointmentTooltipRender}
+                onCellClick={(e)=> {
+                    if(e.cellData.groups.type === 'event') {
+                        schedulerRef.current.instance.showAppointmentPopup(e.cellData);
+                    }
+                }}
                 useDropDownViewSwitcher={false}
                 recurrenceRuleExpr="rule"
                 recurrenceExceptionExpr="exception"
@@ -195,26 +209,41 @@ export default function EventsList() {
 }
 
 
-const handleAppointmentFormOpening = function (schedulerEvent) {
+const handleAppointmentFormOpening = function (chores, schedulerEvent) {
+    const appointmentData = schedulerEvent.appointmentData;
+    const isAddForm = !appointmentData.text;
     let form = schedulerEvent.form;
     schedulerEvent.popup.option('showTitle', true);
-    schedulerEvent.popup.option('title', schedulerEvent.appointmentData.text ?
-        schedulerEvent.appointmentData.text :
-        'Create a new event'
-    );
+    schedulerEvent.popup.option('title', !isAddForm ? appointmentData.text :'Create a new event');
 
-    if (schedulerEvent.appointmentData.type === 'chore') {
+    if (appointmentData.type === 'chore') {
         schedulerEvent.cancel = true;
         return;
     }
 
-    // TODO add event form
     form.itemOption('mainGroup', 'items', [
+        ...(isAddForm ? [{
+            colSpan: 2,
+            dataField: 'name',
+            editorType: 'dxSelectBox',
+            editorOptions: {
+                value: '',
+                dataSource: chores.map(chore => ({ value: chore.uuid, name: chore.name })),
+                valueExpr: 'value',
+                displayExpr: 'name',
+                searchEnabled: true,
+                onValueChanged: function (args) {
+                    form.updateData('chore_uuid', args.value);
+                    form.updateData('isAddForm', true);
+                }
+            }
+        }] : []),
         {
             dataField: 'started_at',
             editorType: 'dxDateBox',
             editorOptions: {
                 type: 'datetime',
+                ...(isAddForm ? { value: appointmentData.startDate } : {}),
                 onValueChanged: function (args) {
                     form.updateData('startDate', args.value);
                     form.updateData('updatedStartDate', args.value);
@@ -226,6 +255,7 @@ const handleAppointmentFormOpening = function (schedulerEvent) {
             editorType: 'dxDateBox',
             editorOptions: {
                 type: 'datetime',
+                ...(isAddForm ? { value: appointmentData.endDate } : {}),
                 onValueChanged: function (args) {
                     form.updateData('endDate', args.value);
                     form.updateData('updatedEndDate', args.value);
@@ -237,20 +267,20 @@ const handleAppointmentFormOpening = function (schedulerEvent) {
             dataField: 'status',
             editorType: 'dxSelectBox',
             editorOptions: {
-                value: schedulerEvent.appointmentData.status,
+                value: appointmentData.status,
                 dataSource: eventStatuses,
                 valueExpr: 'value',
                 displayExpr: 'name'
             }
         },
-        {
+        ...(!isAddForm ? [{
             colSpan: 2,
             dataField: 'notes',
             editorType: 'dxTextArea',
             editorOptions: {
-                value: schedulerEvent.appointmentData.notes
+                value: appointmentData.notes
             }
-        }
+        }] : [])
     ]);
 };
 
