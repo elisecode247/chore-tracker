@@ -10,6 +10,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { userSelector, fetchUserByToken, clearState } from '../../../slices/userApiSlice';
 import UserSettings from '../user/UserSettings';
 import AddChorePanel from '../chores/AddChorePanel';
+import Journal from '../journal';
 const defaultSelectedTab = (
     localStorage.getItem('selectedTabIndex') &&
     parseInt(localStorage.getItem('selectedTabIndex'))
@@ -58,6 +59,9 @@ const Dashboard = function() {
                     </TabPanel>
                     <TabPanel value={selectedTab} index={3}>
                         <UserSettings />
+                    </TabPanel>
+                    <TabPanel value={selectedTab} index={4}>
+                        <Journal />
                     </TabPanel>
                 </MuiPickersUtilsProvider>
             )}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { userSelector } from '../../../slices/userApiSlice';
 import { useAddChoreMutation } from '../../../slices/choresApiSlice';
@@ -20,11 +20,9 @@ import Switch from '@material-ui/core/Switch';
 import TextField from '@material-ui/core/TextField';
 import { KeyboardTimePicker, KeyboardDatePicker } from '@material-ui/pickers';
 import Typography from '@material-ui/core/Typography';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import TipTapMenu from '../../TipTapMenu';
 import FormGroup from '@material-ui/core/FormGroup';
 import Checkbox from '@material-ui/core/Checkbox';
+import TextEditor from '../../TextEditor';
 
 export default function AddChorePanel() {
     const { data: tags, error: errorTags, isLoading: isLoadingTags } = useGetTagsQuery();
@@ -41,24 +39,7 @@ export default function AddChorePanel() {
     const [endDate, setEndDate] = useState(new Date());
     const [endTime, setEndTime] = useState(null);
     const [selectedWeekdays, setSelectedWeekdays] = useState([]);
-
-    const editor = useEditor({
-        extensions: [
-            StarterKit,
-        ],
-        editorProps: {
-            attributes: {
-                class: 'textEditorContainer'
-            }
-        },
-        content: defaultDescription
-    });
-
-    useEffect(() => {
-        if (editor && !editor.isDestroyed) {
-            editor.commands.setContent(settings?.choreSettings?.choreTemplate || defaultDescription);
-        }
-    }, [settings, editor]);
+    const [description, setDescription] = useState(settings?.choreSettings?.choreTemplate || defaultDescription);
 
     const handleRepeatAmountChange = (evt) => {
         setRepeatAmount(evt.target.value < 1 ? 1 : evt.target.value);
@@ -92,7 +73,7 @@ export default function AddChorePanel() {
         const endAt = formatScheduledAt(endDate, endTime);
         addChore({
             name,
-            description: editor.getHTML(),
+            description,
             startAt,
             ...(!isRepeatChecked ? { endAt } : {}),
             hasTime: startTime ? true : false,
@@ -115,9 +96,17 @@ export default function AddChorePanel() {
                 Add New Chore
             </Typography>
             <form id="add-chore-form">
-                <TextField id="add-chore-name-input" fullWidth label="What" onChange={(evt) => setName(evt.target.value)} required type="text" />
-                <EditorContent className={classes.entryContainer} editor={editor} id="add-chore-description-input" />
-                <TipTapMenu editor={editor} />
+                <TextField
+                    className={classes.nameInput}
+                    fullWidth label="What"
+                    onChange={(evt) => setName(evt.target.value)}
+                    required
+                    type="text"
+                />
+                <TextEditor
+                    content={description}
+                    setContent={setDescription}
+                />
                 <div>
                     <FormControl className={`${classes.formControl} ${classes.inlineBlock}`} >
                         <KeyboardDatePicker

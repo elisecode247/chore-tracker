@@ -31,6 +31,9 @@ export const addChorePanelStyles = makeStyles((theme) => ({
         padding: '1rem',
         fontWeight: 700
     },
+    nameInput: {
+        marginBottom: '1rem'
+    },
     switchFormControl: {
         margin: '1rem 0 1rem 0'
     },

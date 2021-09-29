@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { userSelector } from '../../../slices/userApiSlice';
 import makeStyles from '@material-ui/core/styles/makeStyles';
@@ -6,8 +6,7 @@ import Paper from '@material-ui/core/Paper';
 import TextField from '@material-ui/core/TextField';
 import IconButton from '@material-ui/core/IconButton';
 import SaveIcon from '@material-ui/icons/Save';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
+import TextEditor from '../../TextEditor';
 import InputLabel from '@material-ui/core/InputLabel';
 import Typography from '@material-ui/core/Typography';
 import { updateUserSettings } from '../../../slices/userApiSlice';
@@ -32,45 +31,15 @@ export default function UserSettings() {
     const dispatch = useDispatch();
     const { settings, isFetching: isUserLoading, isError: isUserError } = useSelector(userSelector);
     const [journalInstructions, setJournalInstructions] = useState(settings.journalSettings.journalInstructions);
-    const journalEntryEditor = useEditor({
-        extensions: [
-            StarterKit,
-        ],
-        editorProps: {
-            attributes: {
-                class: 'textEditorContainer'
-            }
-        }
-    });
-    const choreTemplateEditor = useEditor({
-        extensions: [
-            StarterKit,
-        ],
-        editorProps: {
-            attributes: {
-                class: 'textEditorContainer'
-            }
-        }
-    });
-
-    useEffect(() => {
-        if (journalEntryEditor && !journalEntryEditor.isDestroyed) {
-            journalEntryEditor.commands.setContent(settings.journalSettings.journalTemplate);
-        }
-    }, [journalEntryEditor, settings]);
-
-    useEffect(() => {
-        if (choreTemplateEditor && !choreTemplateEditor.isDestroyed) {
-            choreTemplateEditor.commands.setContent(settings.choreSettings.choreTemplate);
-        }
-    }, [choreTemplateEditor, settings]);
+    const [journalTemplate, setJournalTemplate] = useState(settings.journalSettings.journalTemplate);
+    const [choreTemplate, setChoreTemplate] = useState(settings.choreSettings.choreTemplate);
 
     const handleJournalSave = function () {
         dispatch(updateUserSettings({
             ...settings,
             journalSettings: {
-                journalTemplate: journalEntryEditor.getHTML(),
-                journalInstructions: journalInstructions
+                journalTemplate,
+                journalInstructions
             }
         }));
     };
@@ -79,7 +48,7 @@ export default function UserSettings() {
         dispatch(updateUserSettings({
             ...settings,
             choreSettings: {
-                choreTemplate: choreTemplateEditor.getHTML(),
+                choreTemplate,
             }
         }));
     };
@@ -116,7 +85,11 @@ export default function UserSettings() {
                     variant="outlined"
                 />
                 <InputLabel htmlFor="journal-entry-template">Journal Entry Template</InputLabel>
-                <EditorContent id="journal-entry-template" className={classes.entryContainer} editor={journalEntryEditor} />
+                <TextEditor 
+                    id="journal-entry-template"
+                    content={journalTemplate}
+                    setContent={setJournalTemplate}
+                />
             </Paper>
             <Paper className={classes.paper} elevation={3}>
                 <Typography variant="h5" id="choreSettingTypography" component="h2">
@@ -126,10 +99,12 @@ export default function UserSettings() {
                     </IconButton>
                 </Typography>
                 <InputLabel className={classes.setting} htmlFor="chore-entry-template">Chore Entry Template</InputLabel>
-                <EditorContent id="chore-entry-template" className={classes.entryContainer} editor={choreTemplateEditor} />
-                <Button onClick={()=>{
-                    choreTemplateEditor.commands.setContent(defaultDescription);
-                }}><RestoreIcon/> Reset to Default</Button>
+                <TextEditor 
+                    id="chore-entry-template"
+                    content={choreTemplate}
+                    setContent={setChoreTemplate}
+                />
+                <Button onClick={() => setChoreTemplate(defaultDescription)}><RestoreIcon/> Reset to Default</Button>
             </Paper>
         </div>
     );

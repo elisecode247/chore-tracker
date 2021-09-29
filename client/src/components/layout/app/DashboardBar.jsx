@@ -70,6 +70,7 @@ export default function DashboardBar({ isFetching, onLogin, onLogOut, selectedTa
                         <Tab label="Chores" {...a11yProps(1)} />
                         <Tab label="Add New Chore" {...a11yProps(2)} />
                         <Tab label="Settings" {...a11yProps(3)} />
+                        <Tab label="Journal" {...a11yProps(4)} />
                     </Tabs>
                     <FormGroup className={classes.login}>
                         <FormControlLabel

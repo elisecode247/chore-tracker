@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
@@ -14,13 +14,10 @@ import {
     useAddJournalEntryMutation,
     useUpdateJournalEntryMutation
 } from '../../../slices/journalApiSlice';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
 import { useSelector } from 'react-redux';
 import { userSelector } from '../../../slices/userApiSlice';
 import { defaultJournalSettings } from '../../../constants/defaultValues';
-import TipTapMenu from '../../TipTapMenu';
-
+import TextEditor from '../../TextEditor';
 const useStyles = makeStyles({
     root: {
         padding: '1rem'
@@ -38,24 +35,8 @@ export default function Journal() {
     const { settings } = useSelector(userSelector);
     const journalSettings = (Object.values(settings).length && settings && settings.journalSettings) || defaultJournalSettings;
     const [view, setView] = useState(localStorage.getItem('journalView') === 'true');
+    const [entryContents, setEntryContents] = useState(journalEntry);
 
-    const editor = useEditor({
-        extensions: [
-            StarterKit,
-        ],
-        editorProps: {
-            attributes: {
-                class: 'textEditorContainer'
-            }
-        }
-    });
-
-    useEffect(()=> {
-        const text = (journalEntry && journalEntry[0] && journalEntry[0].entry) || journalSettings.journalTemplate;
-        if(text && editor && !editor.isDestroyed){
-            editor.commands.setContent(text);
-        }
-    }, [journalEntry, editor, journalSettings]);
 
     const handleViewChange = function() {
         setView(!view);
@@ -64,9 +45,9 @@ export default function Journal() {
 
     const handleSave = function() {
         if (journalEntry.length) {
-            updateJournalEntry({ entry: editor.getHTML(), uuid: journalEntry[0].uuid });
+            updateJournalEntry({ entry: entryContents, uuid: journalEntry[0].uuid });
         } else {
-            addJournalEntry({ entry: editor.getHTML(), entryDate: new Date() });
+            addJournalEntry({ entry: entryContents, entryDate: new Date() });
         }
     };
 
@@ -96,8 +77,10 @@ export default function Journal() {
                         <Typography className={classes.title} color="textSecondary" gutterBottom>
                             {journalSettings.journalInstructions}
                         </Typography>
-                        <EditorContent className={classes.entryContainer} editor={editor} />
-                        <TipTapMenu editor={editor} />
+                        <TextEditor
+                            content={entryContents}
+                            setContent={setEntryContents}
+                        />
                     </CardContent>
                     <CardActions className={classes.root}>
                         <Button size="small" onClick={handleSave}>

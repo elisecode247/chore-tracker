@@ -1,4 +1,4 @@
-import React, { createRef, useEffect, useState } from 'react';
+import React, { createRef, useState } from 'react';
 import Box from '@material-ui/core/Box';
 import Collapse from '@material-ui/core/Collapse';
 import IconButton from '@material-ui/core/IconButton';
@@ -14,9 +14,6 @@ import EditIcon from '@material-ui/icons/Edit';
 import Chip from '@material-ui/core/Chip';
 import { choresListRowStyles as useStyles } from './styles.js';
 import { DATE_FORMAT } from '../../../constants/dateTimeFormats';
-import { useEditor, EditorContent } from '@tiptap/react';
-import TipTapMenu from '../../TipTapMenu';
-import StarterKit from '@tiptap/starter-kit';
 import { useUpdateChoreMutation } from '../../../slices/choresApiSlice';
 import VisibilityIcon from '@material-ui/icons/Visibility';
 import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
@@ -29,6 +26,7 @@ import Select from '@material-ui/core/Select';
 import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
 import FrequencyCell from './FrequencyCell';
+import TextEditor from '../../TextEditor/index.js';
 
 export default function Row({ chore, tags }) {
     const [updateChore, { isLoading: isUpdateChoreLoading }] = useUpdateChoreMutation();
@@ -36,6 +34,7 @@ export default function Row({ chore, tags }) {
     const [editName, setEditName] = useState(false);
     const [editTags, setEditTags] = useState(false);
     const [name, setName] = useState(chore.name);
+    const [description, setDescription] = useState(chore.description);
     const [selectedTagUuids, setSelectedTags] = useState((chore.tags && chore.tags.map(t => t.uuid)) || []);
     const selectedTags = selectedTagUuids.reduce((acc, uuid) => {
         const selectedTag = tags && tags.length && tags.find(t => t.uuid === uuid);
@@ -46,23 +45,6 @@ export default function Row({ chore, tags }) {
     }, []);
     const classes = useStyles();
     const wrapper = createRef();
-    const editor = useEditor({
-        extensions: [
-            StarterKit,
-        ],
-        editorProps: {
-            attributes: {
-                class: 'textEditorContainer'
-            }
-        },
-        content: chore.description
-    });
-
-    useEffect(()=> {
-        if (editor && !editor.isDestroyed) {
-            editor.commands.setContent(chore.description);
-        }
-    }, [chore.description, editor]);
 
     const handleSelectedTagsChange = (event) => {
         const { value } = event.target;
@@ -88,7 +70,7 @@ export default function Row({ chore, tags }) {
     const handleDescriptionSaveClick = () => {
         updateChore({
             uuid: chore.uuid,
-            description: editor.getHTML()
+            description
         });
     };
 
@@ -195,8 +177,10 @@ export default function Row({ chore, tags }) {
                             Directions
                             <IconButton onClick={handleDescriptionSaveClick}><SaveIcon /></IconButton>
                         </Typography>
-                        <EditorContent className={classes.entryContainer} editor={editor} id={`chore-description-${chore.uuid}`} />
-                        <TipTapMenu editor={editor} />
+                        <TextEditor
+                            content={description}
+                            setContent={setDescription}
+                        />
                         <Typography className={classes.h4} variant="h6" component="h4">
                             Most Recent History
                         </Typography>
