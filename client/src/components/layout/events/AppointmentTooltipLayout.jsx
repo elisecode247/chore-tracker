@@ -1,11 +1,14 @@
 import {
+    DAY_OF_WEEK_AND_DATE_AND_TIME,
     DATE_AND_TIME_FORMAT,
-    DATE_FORMAT
+    DATE_FORMAT,
+    TIME_FORMAT
 } from '../../../constants/dateTimeFormats';
 import format from 'date-fns/format';
 import Button from '@material-ui/core/Button';
 import ReactHtmlParser from 'react-html-parser';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
+import { formatFrequencyForDisplay } from '../../../utilities/chores';
 
 export default function AppointmentTooltip({
     appointmentData,
@@ -54,13 +57,26 @@ export default function AppointmentTooltip({
                 <div style={{ textAlign: 'center' }}>
                     <small>Chore</small>
                     <h1>{appointmentData.text}</h1>
-                    <p>{format(new Date(appointmentData.start_at), appointmentData.has_time ? DATE_AND_TIME_FORMAT : DATE_FORMAT)}</p>
+                    <p>
+                        {!appointmentData.frequency ?
+                            (format(new Date(appointmentData.start_at), !appointmentData.has_time ? DATE_FORMAT : DATE_AND_TIME_FORMAT)) :
+                            (!appointmentData.has_time ? '' : format(new Date(appointmentData.start_at), TIME_FORMAT))
+                        }
+                    </p>
                     <ButtonGroup style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
                         <Button onClick={handleIgnoreChore} variant="outlined">Skip Today</Button>
                         <Button onClick={handleChoreMarkStart} variant="outlined">Start Chore</Button>
                         <Button onClick={handleMarkChoreDoneScheduled} variant="outlined">Mark Done Scheduled</Button>
                         <Button onClick={handleMarkChoreDoneNow} variant="outlined">Mark Done Now</Button>
                     </ButtonGroup>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline' }}>
+                    <h2>Frequency</h2>
+                    <p style={{ marginLeft: '1rem' }}>{formatFrequencyForDisplay(appointmentData)}</p>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline' }}>
+                    <h2>Last Completed</h2>
+                    <p style={{ marginLeft: '1rem' }}>{(appointmentData.history[0] && format(new Date(appointmentData.history[0].completed_at), DAY_OF_WEEK_AND_DATE_AND_TIME)) || 'Unknown'}</p>
                 </div>
                 <div>{ReactHtmlParser(appointmentData.description)}</div>
             </div>
