@@ -317,7 +317,7 @@ export function formatFrequencyForServer({
 }) {
     let frequencyString = '';
     if (!repeatType) return frequencyString;
-    if (!['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'].includes(repeatType)) return frequencyString;
+    if (!['HOURLY', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'].includes(repeatType)) return frequencyString;
     frequencyString += `FREQ=${repeatType}`;
     if (repeatAmount > 1) {
         frequencyString += `;INTERVAL=${repeatAmount}`;
@@ -348,7 +348,7 @@ export function formatFrequencyForDisplay(chore) {
     let frequencyDisplay = '';
     if (!freqObj.INTERVAL) {
         frequencyDisplay = titleCase(freqObj.FREQ);
-    } else if (['DAILY', 'WEEKLY'].includes(freqObj.FREQ) && freqObj.INTERVAL !== '1') {
+    } else if (['HOURLY', 'DAILY', 'WEEKLY'].includes(freqObj.FREQ) && freqObj.INTERVAL !== '1') {
         frequencyDisplay = `Every ${freqObj.INTERVAL} ${repeatTypeNoun[freqObj.FREQ]}s`;
     } else {
         frequencyDisplay = 'WIP';
@@ -360,7 +360,9 @@ export function formatFrequencyForDisplay(chore) {
         frequencyDisplay += ` on ${freqObj.BYDAY.split(',').map(day => weekdayAbbreviations[day]).join(', ')}`;
     }
     if (chore.has_time) {
-        if (chore.end_at) {
+        if (freqObj.FREQ === 'HOURLY') {
+            frequencyDisplay += ` starting at ${format(startAt, TIME_FORMAT)}`;
+        } else if (chore.end_at) {
             frequencyDisplay += ` from ${format(startAt, TIME_FORMAT)} to ${format(new Date(chore.end_at), TIME_FORMAT)}`;
         } else {
             frequencyDisplay += ` at ${format(startAt, TIME_FORMAT)}`;
@@ -374,6 +376,7 @@ function titleCase(string) {
 }
 
 export const repeatTypeNoun = {
+    HOURLY: 'hour',
     DAILY: 'day',
     WEEKLY: 'week',
     MONTHLY: 'month',

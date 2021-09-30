@@ -170,6 +170,7 @@ export default function FrequencyCell({ chore }) {
                                     value={repeatType}
                                     onChange={handleRepeatTypeChange}
                                 >
+                                    <MenuItem value='HOURLY'>Hourly</MenuItem>
                                     <MenuItem value='DAILY'>Daily</MenuItem>
                                     <MenuItem value='WEEKLY'>Weekly</MenuItem>
                                     <MenuItem value='MONTHLY'>Monthly</MenuItem>

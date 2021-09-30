@@ -297,7 +297,7 @@ const renderAppointment = (model) => {
             <>
                 <b> {data.text} </b>
                 <i style={{ padding: '0 0.5rem 0 0.5rem' }}>
-                    {data.has_time && data.start_at ? format(new Date(data.start_at), TIME_FORMAT) : 'any time'}
+                    {data.has_time && data.start_at ? format(new Date(data.startDate), TIME_FORMAT) : 'any time'}
                     {data.has_time && data.end_at ? (<> to {format(new Date(data.end_at), TIME_FORMAT)}</>) : null}
                 </i>
             </>

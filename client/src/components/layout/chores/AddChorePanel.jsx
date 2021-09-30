@@ -42,7 +42,7 @@ export default function AddChorePanel() {
     const [description, setDescription] = useState(settings?.choreSettings?.choreTemplate || defaultDescription);
 
     const handleRepeatAmountChange = (evt) => {
-        setRepeatAmount(evt.target.value < 1 ? 1 : evt.target.value);
+        setRepeatAmount(evt.target.value);
     };
 
     const handleFrequencyTypeChange = (evt) => {
@@ -69,6 +69,9 @@ export default function AddChorePanel() {
     };
 
     const handleSubmit = () => {
+        // TODO validation
+        // repeatAmount must be 1 > 0
+        // If repeat hourly, start date and time must be same date and endAt is NOT optional
         const startAt = formatScheduledAt(startDate, startTime);
         const endAt = formatScheduledAt(endDate, endTime);
         addChore({
@@ -182,6 +185,7 @@ export default function AddChorePanel() {
                                 value={repeatType}
                                 onChange={handleFrequencyTypeChange}
                             >
+                                <MenuItem value='HOURLY'>Hourly</MenuItem>
                                 <MenuItem value='DAILY'>Daily</MenuItem>
                                 <MenuItem value='WEEKLY'>Weekly</MenuItem>
                                 <MenuItem value='MONTHLY'>Monthly</MenuItem>
