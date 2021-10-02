@@ -76,7 +76,7 @@ export default function AppointmentTooltip({
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline' }}>
                     <h2>Last Completed</h2>
-                    <p style={{ marginLeft: '1rem' }}>{(appointmentData.history[0] && format(new Date(appointmentData.history[0].completed_at), DAY_OF_WEEK_AND_DATE_AND_TIME)) || 'Unknown'}</p>
+                    <p style={{ marginLeft: '1rem' }}>{(appointmentData.history && appointmentData.history[0] && format(new Date(appointmentData.history[0].completed_at), DAY_OF_WEEK_AND_DATE_AND_TIME)) || 'Unknown'}</p>
                 </div>
                 <div>{ReactHtmlParser(appointmentData.description)}</div>
             </div>
